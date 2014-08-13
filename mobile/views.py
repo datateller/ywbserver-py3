@@ -10,6 +10,7 @@ from django.utils import http
 from django.core import serializers
 from datetime import *
 from users.utils import *
+from merchant.models import *
 import base64, json, random, math
 from django.template.loader import get_template
 from django.template import Context
@@ -232,8 +233,17 @@ def consumption_list_encode(consumptions):
         rets.append(t)
     return rets
 
+from django.view.decorators.http import require_POST
 
+@require_POST
+def mobile_view_findhelp(request):
+    (authed, username, password, user) = auth_user(request)
+    if not authed or not user:
+        return HttpResponse('AUTH_FAILED') 
 
-
-
+    content = request.POST.get('content', '')
+    pub_time = datetime.datetime.utcnow().replace(tzinfo=utc)
+    userdemand = UserDemand(content=content, pub_time=pub_time)
+    userdemand.save()
+    return HttpResponse({'status':'OK'})
 

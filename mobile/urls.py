@@ -12,4 +12,5 @@ urlpatterns = patterns('',
     url(r'^getknowledges/', mobile_view_knowledges, name='mobile view'),
     url(r'^getshops/', mobile_view_shops, name='mobile view'),
     url(r'^getconsumptions/', mobile_view_consumptions, name='mobile view'),
+    url(r'^findhelp/', mobile_view_findhelp, name='mobile find help'),
 )
