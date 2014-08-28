@@ -11,6 +11,7 @@ import dbarray
 class Merchant(models.Model):
     user = models.OneToOneField(User)
     name = models.CharField(max_length=100)
+    phonenumber = models.CharField(max_length=20)
     city = models.CharField(max_length=20)
     address = models.CharField(max_length=100)
     longitude = models.FloatField(null=True)
@@ -18,6 +19,9 @@ class Merchant(models.Model):
     description = models.CharField(max_length=2000)
     point = models.PointField(null=True)
     objects = models.GeoManager()
+
+    def geturl(self):
+        return "http://www.yangwabao.com/merchant/merchantdetail/" + str(self.id) + "/"
 
 class CommercialHistory(models.Model):
     commercial_id = models.IntegerField()
@@ -32,6 +36,8 @@ class HelpFinder(models.Model):
 class UserDemand(models.Model):
     user = models.ForeignKey(User)
     content = models.CharField(max_length=2000)
+    classify = models.CharField(max_length=15, null=True)
+    validdate = models.DateTimeField(null=True)
     pub_time = models.DateTimeField()
 
 class UserDemandCollect(models.Model):
@@ -77,5 +83,9 @@ def userdemandslist_encode(userdemands):
         t['userdemand_id'] = demand.id
         t['content'] = demand.content
         t['publish_time'] = demand.pub_time.strftime('%Y-%m-%d %H:%M:%S') 
+        respcount = demand.userdemandresp_set.count()
+        t['response_state'] = 'yes' if respcount > 0 else 'no'
+        t['response_num'] = respcount
+        
         rets.append(t)
     return rets

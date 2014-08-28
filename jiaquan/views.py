@@ -295,6 +295,7 @@ def list_topic_nearby(request):
             # If page is out of range (e.g. 9999), deliver last page of results.
             return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
     except Exception as e:
+        print('Exception' + str(e))
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 

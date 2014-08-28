@@ -85,3 +85,8 @@ def get_nearby_topic(longitude, latitude, page_size = 5):
     topics = JiaTopic.objects.distance(point).order_by('distance')
     paginator = Paginator(topics, page_size)
     return paginator
+
+def get_nearby_point_topic(point, page_size = 5):
+    topics = JiaTopic.objects.distance(point).order_by('distance')
+    paginator = Paginator(topics, page_size)
+    return paginator

@@ -34,9 +34,35 @@
 </span>
 </div>
 
+
+<div class="intro">
+<span>
+<p style="font-weight: 100">
+联系电话：{{commercial_phonenumber}}
+</p>
+</span>
+</div>
+
+
+<div class="intro">
+<span>
+<p style="font-weight: 100">
+{% if commercial_fromdate %}
+起始日期：{{commercial_fromdate}}
+{% endif %}
+{% if commercial_enddate %}
+<br/>
+截止日期：{{commercial_enddate}}
+{% endif %}
+</p>
+</span>
+</div>
+
+
+
 <div class="detailinfo">
 <span>
-<a href="{{commercial_url}}">详细信息</a>
+<a href="/merchant/merchantdetail/{{merchant_id}}/">商家信息</a>
 </span>
 <br></br>
 </div>

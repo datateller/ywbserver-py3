@@ -119,7 +119,6 @@ def list_person_userdemand(request):
 @require_GET
 def list_person_comments(request):
     try:
-        print("####pserson comments")
         (authed, username, password, user) = auth_user(request)
         if not authed or not user:
             return HttpResponse("AUTH_FAILED")

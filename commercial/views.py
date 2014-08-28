@@ -59,7 +59,11 @@ def mobile_web_view(request, commercialid):
         c['commercial_title'] = o.title                                                        
         c['commercial_content'] = o.content                                                    
         c['commercial_address'] = o.merchant.address                                           
-        c['commercial_url'] = "www.yangwabao.com"                                              
+        #c['commercial_url'] = "www.yangwabao.com"
+        c['commercial_phonenumber'] = o.merchant.phonenumber
+        c['commercial_fromdate'] = o.valid_date_from
+        c['commercial_enddate'] = o.valid_date_end
+        c['merchant_id'] = o.merchant.id
         picindex = random.randint(0,9)                                                         
         c['pic'] = o.photo.url
         c['comments'] = CommercialComment.objects.filter(commercialid=o)                       
