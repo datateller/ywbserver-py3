@@ -93,9 +93,11 @@ def register(request):
         baby_sex = request.POST.get('babysex')
         baby_homeaddr = request.POST.get('homeaddr')
         baby_schooladdr = request.POST.get('schooladdr')
+        baby_mobile = request.POST.get('mobile')
         baby.name = baby_name
         baby.height = baby_height
         baby.weight = baby_weight
+        baby.mobile = baby_mobile
         try:
             baby.birthday = datetime.datetime.fromtimestamp(time.mktime(time.strptime(baby_birthday,"%Y-%m-%d")))
         except Exception as e:
@@ -181,6 +183,7 @@ def update(request):
         baby_name = request.POST.get('babyname')
         baby_homeaddr = request.POST.get('homeaddr')
         baby_schooladdr = request.POST.get('schooladdr')
+        baby_mobile = request.POST.get('mobile')
         baby = User.objects.get(id=user.id).baby
         if not baby:
             response = 'BABY_INFO_NULL'
@@ -189,6 +192,8 @@ def update(request):
             baby.weight = float(baby_weight)
         if baby_height:
             baby.height = float(baby_height)
+        if baby_mobile:
+            baby.mobile = float(baby_mobile)
         try:
             if baby_birthday:
                 baby.birthday = datetime.datetime.fromtimestamp(time.mktime(time.strptime(baby_birthday,"%Y-%m-%d")))
