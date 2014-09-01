@@ -16,6 +16,6 @@ urlpatterns = patterns('',
     url(r'^posthead/', views.upload_head, name='posthead'),
     url(r'^gethead/', views.get_head, name='gethead'),
     
-    url(r'^informationcheck/', views.informationcheck, name='informationcheck'),
+#     url(r'^informationcheck/', views.informationcheck, name='informationcheck'),
     url(r'^gethomepic/', views.gethomepic, name='gethomepic'),
 )
