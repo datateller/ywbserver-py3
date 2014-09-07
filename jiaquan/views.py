@@ -83,15 +83,15 @@ def get_topicbyid_webview(request, userid, topicid):
     try:
         topic = JiaTopic.objects.get(id = topicid)
         if not topic:
-            return HttpResponse("INVALID_ID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_ID'))
     except Exception as e:
-        return HttpResponse("INVALID_ID")
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_ID'))
     try:
         user = User.objects.get(id=userid)
         if not topic:
-            return HttpResponse("INVALID_USERID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_USERID'))
     except Exception as e:
-            return HttpResponse("INVALID_USERID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_USERID'))
     context = {}
     context['headurl'] = getheadurl(topic.from_user, 'thumbnail')
     context['topic'] = topic
@@ -299,5 +299,30 @@ def list_topic_nearby(request):
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def post_comment(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        content = request.POST.get('content')
+        topicid = request.POST.get('topicid')
+        if not content:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+        comment = JiaComment(from_user = user,
+                             content =  content,
+                             create_time = timenow,
+                             topic = JiaTopic.objects.get(id = topicid)
+                             )
 
+        ret = comment.save()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
 
