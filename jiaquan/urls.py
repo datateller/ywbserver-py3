@@ -19,4 +19,8 @@ urlpatterns = patterns('',
     url(r'^posttopic/', post_topic, name='post_topic'),
     url(r'^listtopic/', list_topic, name='list_topic'),
     url(r'^listtopicnearby/', list_topic_nearby, name='list_topic_nearby'),
+    
+    url(r'^collect/',collect_topic, name='collectknowl'),
+    url(r'^listcollect/',list_collection, name='list_collection'),
+    url(r'^cancel/',cancel_collection, name='cancelknowl'),
 )

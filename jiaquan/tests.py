@@ -158,10 +158,71 @@ def test_post_comment():
     fp.close()
     return r.text
 
+def test_collect():
+    username = 'shentest1'
+    password = 'shentest1'
+    username = http.urlsafe_base64_encode(username.encode()).decode()
+    password = http.urlsafe_base64_encode(password.encode()).decode()
+    loginurl = 'http://localhost:8000/user/login/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'username': username, 'password': password}
+    r = requests.post(loginurl, data=payload, headers = headers)
+    cookies = r.cookies
+    url = 'http://localhost:8000/jiaquan/collect/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'id': 2}
+    r = requests.post(url, data=payload, headers = headers, cookies = cookies)
+    fp = open("test.html",'w')
+    fp.write(r.text)
+    fp.close()
+    return r.text
+
+def test_cancle_collect():
+    username = 'shentest1'
+    password = 'shentest1'
+    username = http.urlsafe_base64_encode(username.encode()).decode()
+    password = http.urlsafe_base64_encode(password.encode()).decode()
+    loginurl = 'http://localhost:8000/user/login/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'username': username, 'password': password}
+    r = requests.post(loginurl, data=payload, headers = headers)
+    cookies = r.cookies
+    url = 'http://localhost:8000/jiaquan/cancel/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'id': 2}
+    r = requests.post(url, data=payload, headers = headers, cookies = cookies)
+    fp = open("test.html",'w')
+    fp.write(r.text)
+    fp.close()
+    return r.text
+
+def test_get_collect():
+    username = 'shentest1'
+    password = 'shentest1'
+    username = http.urlsafe_base64_encode(username.encode()).decode()
+    password = http.urlsafe_base64_encode(password.encode()).decode()
+    loginurl = 'http://localhost:8000/user/login/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'username': username, 'password': password}
+    r = requests.post(loginurl, data=payload, headers = headers)
+    cookies = r.cookies
+    url = 'http://localhost:8000/jiaquan/listcollect/?number=3&page=0'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {}
+    r = requests.get(url, data=payload, headers = headers, cookies = cookies)
+    fp = open("test.html",'w')
+    fp.write(r.text)
+    fp.close()
+    return r.text
+
 #print(test_post_topic())
 #print(test_add_comment())
 #print(test_get_topic())
 #print(test_get_topiclist())
 #print(test_get_topiclist_nearby())
 #print(test_get_topic_webview())
-print(test_post_comment())
+#print(test_post_comment())
+#print(test_collect())
+#print(test_get_collect())
+print(test_cancle_collect())
+

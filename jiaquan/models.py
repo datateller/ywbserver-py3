@@ -80,6 +80,10 @@ class JiaComment(CommentBase):
 class Photo(PhotoBase):
     topic = models.ForeignKey(JiaTopic)
 
+class JiaTopicCollection(models.Model):
+    user = models.OneToOneField(User)
+    collections = dbarray.IntegerArrayField()
+
 def get_nearby_topic(longitude, latitude, page_size = 5):
     point = fromstr("POINT(%s %s)" % (longitude, latitude))
     topics = JiaTopic.objects.distance(point).order_by('distance')
@@ -90,3 +94,12 @@ def get_nearby_point_topic(point, page_size = 5):
     topics = JiaTopic.objects.distance(point).order_by('distance')
     paginator = Paginator(topics, page_size)
     return paginator
+
+
+def get_topics_byids(ids):
+    if not ids:
+        return None
+    topics =JiaTopic.objects.filter(id__in = ids)
+    topics_list = list(topics)
+    topics_list.sort(key=lambda topics: -ids.index(topics.id))
+    return topics_list
