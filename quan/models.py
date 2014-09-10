@@ -24,5 +24,9 @@ class CommentBase(models.Model):
     class Meta:
         abstract = True
     
-    
+class PraiseBase(models.Model):
+    from_user = models.ForeignKey(User)
+    create_time = models.DateTimeField(default=datetime.datetime.utcnow().replace(tzinfo=utc))
+    class Meta:
+        abstract = True
     
