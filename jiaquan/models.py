@@ -76,6 +76,11 @@ class JiaTopic(TopicBase):
 
 class JiaComment(CommentBase):
     topic = models.ForeignKey(JiaTopic)
+    class Meta:
+        unique_together = ("topic", "from_user")
+    
+class JiaPraise(PraiseBase):
+    topic = models.ForeignKey(JiaTopic, related_name="JiaPraiseTopic")
     
 class Photo(PhotoBase):
     topic = models.ForeignKey(JiaTopic)

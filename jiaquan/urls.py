@@ -23,4 +23,8 @@ urlpatterns = patterns('',
     url(r'^collect/',collect_topic, name='collectknowl'),
     url(r'^listcollect/',list_collection, name='list_collection'),
     url(r'^cancel/',cancel_collection, name='cancelknowl'),
+    
+    url(r'^postpraise/$', post_praise, name='post_praise'),
+    url(r'^cancelpraise/$', cancel_praise, name='cancel_praise'),
+    url(r'^listpraisetopic/$', list_praise_topic, name='list_praise_topic'),
 )
