@@ -129,3 +129,187 @@ def list_topic(request):
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 
+#发表评论接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def post_comment(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        content = request.POST.get('content')
+        topicid = request.POST.get('topicid')
+        if not content:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+        comment = TlComment(from_user = user,
+                             content =  content,
+                             create_time = timenow,
+                             topic = TlTopic.objects.get(id = topicid)
+                             )
+
+        ret = comment.save()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#点赞接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def post_praise(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        topicid = request.POST.get('id')
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+        comment = TlPraise(from_user = user,
+                             create_time = timenow,
+                             topic = TlTopic.objects.get(id = topicid)
+                             )
+        ret = comment.save()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#取消赞接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def cancel_praise(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        topicid = request.POST.get('id')
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        praise = TlPraise.objects.get(topic = TlTopic.objects.get(id = topicid), from_user = user)
+        ret = praise.delete()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+#列出赞过的帖子
+def list_praise_topic(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        if not request.GET.get('page'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.GET.get('number'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        page = int(request.GET.get('page'))
+        number = int(request.GET.get('number'))
+        topics = TlTopic.objects.filter(TlPraiseTopic__from_user = user)
+        paginator = Paginator(topics, number)
+        try:
+            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+    except Exception as e:
+        print('Exception:' + str(type(e)) + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+#收藏帖子
+@csrf_exempt
+def collect_topic(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.POST.get('id'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        topicid = request.POST.get('id')
+        topicid = int(topicid)
+        try:
+            collection_record = TlTopicCollection.objects.get(user = user)
+        except TlTopicCollection.DoesNotExist:
+            new_collection_record = TlTopicCollection(user = user, collections = [])
+            new_collection_record.collections.append(topicid)
+            new_collection_record.save()
+            return HttpResponse(json_serialize(status = 'OK'))
+        else:
+            if topicid not in collection_record.collections:
+                collection_record.collections.append(topicid)
+                collection_record.save()
+            return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#取消收藏
+@csrf_exempt
+def cancel_collection(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.POST.get('id'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        topicid = request.POST.get('id')
+        topicid = int(topicid)
+        try:
+            collection_record = TlTopicCollection.objects.get(user = user)
+        except TlTopicCollection.DoesNotExist:
+            return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+        else:
+            if topicid not in collection_record.collections:
+                return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+            collection_record.collections.remove(topicid)
+            collection_record.save()
+            return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#列出收藏
+def list_collection(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        if not request.GET.get('page'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.GET.get('number'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        page = int(request.GET.get('page'))
+        number = int(request.GET.get('number'))
+        try:
+            collection = user.tltopiccollection
+        except TlTopicCollection.DoesNotExist:
+            return HttpResponse(json_serialize(status = 'OK', result = {}))
+        if not collection:
+            return HttpResponse(json_serialize(status = 'OK', result = {}))
+        topicids = collection.collections
+        topics = get_topics_byids(topicids)
+        paginator = Paginator(topics, number)
+        try:
+            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+    except Exception as e:
+        print('Exception:' + str(type(e)) + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))

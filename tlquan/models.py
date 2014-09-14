@@ -21,7 +21,16 @@ class TlComment(CommentBase):
 class Photo(PhotoBase):
     topic = models.ForeignKey(TlTopic)
     
+
+class TlPraise(PraiseBase):
+    topic = models.ForeignKey(TlTopic, related_name="TlPraiseTopic")
     
+
+class TlTopicCollection(models.Model):
+    user = models.OneToOneField(User)
+    collections = dbarray.IntegerArrayField()
+
+
 def comments_encode(comments):
     rets = []
     number = len(list(comments))
@@ -70,3 +79,10 @@ def circletopic_encode(topics):
         rets.append(t)
     return rets
     
+def get_topics_byids(ids):
+    if not ids:
+        return None
+    topics =TlTopic.objects.filter(id__in = ids)
+    topics_list = list(topics)
+    topics_list.sort(key=lambda topics: -ids.index(topics.id))
+    return topics_list
