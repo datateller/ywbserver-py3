@@ -7,6 +7,7 @@ import datetime, json, dbarray
 from django.utils.timezone import utc
 from photos.models import *
 from quan.models import *
+from rss.models import *
 # Create your models here.
         
 
@@ -52,13 +53,17 @@ def circletopiclist_encode(topics):
         topic = topics[i]
         t = {}
         t['topicid'] = topic.id
-        t['from_user'] = topic.from_user.username
+        if topic.from_user:
+            t['from_user'] = topic.from_user.username
+        else:
+            t['from_user'] = "匿名用户"
         t['from_user_id'] = topic.from_user.id
         t['headurl'] = getheadurl(topic.from_user, 'thumbnail')
         t['content'] = topic.content
         t['comments_num'] = len(TlComment.objects.filter(topic = topic))
         t['create_time'] = topic.create_time.strftime('%Y-%m-%d %H:%M:%S' )
         t['update_time'] = topic.update_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['link'] = ""
         rets.append(t)
     return rets
 
@@ -78,6 +83,20 @@ def circletopic_encode(topics):
         print(t)
         rets.append(t)
     return rets
+
+#序列化圈子新闻
+def circlenews_encode(news):
+    t = {}
+    t['topicid'] = -1
+    t['from_user'] = "养娃宝新闻精选"
+    t['from_user_id'] = 0
+    t['headurl'] = getheadurl(None, 'thumbnail')
+    t['content'] = news.title
+    t['comments_num'] = 0
+    t['create_time'] = news.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+    t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
+    t['link'] = news.link
+    return t
     
 def get_topics_byids(ids):
     if not ids:

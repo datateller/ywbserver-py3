@@ -40,18 +40,18 @@ def test_add_comment():
     fp.close()
 
 def test_get_topiclist():
-    username = 'xzh'
-    password = '111111'
+    username = 'shentest1'
+    password = 'shentest1'
     username = http.urlsafe_base64_encode(username.encode()).decode()
     password = http.urlsafe_base64_encode(password.encode()).decode()
-    #loginurl = 'http://localhost:8000/user/login/'
-    loginurl = 'http://www.yangwabao.com:80/user/login/'
+    loginurl = 'http://localhost:8000/user/login/'
+    #loginurl = 'http://www.yangwabao.com:80/user/login/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
     payload = {'username': username, 'password': password}
     r = requests.post(loginurl, data=payload, headers = headers)
     cookies = r.cookies
-    #url = 'http://localhost:8000/tlquan/listtopic/?page=1&number=3'
-    url = 'http://www.yangwabao.com:80/tlquan/listtopic/'
+    url = 'http://localhost:8000/tlquan/listtopic/?page=1&number=3'
+    #url = 'http://www.yangwabao.com:80/tlquan/listtopic/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
     r = requests.get(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
@@ -227,12 +227,12 @@ def test_get_praise_topic():
 #print(test_post_topic())
 #print(test_add_comment())
 #print(test_get_topic())
-#print(test_get_topiclist())
+print(test_get_topiclist())
 #print(test_get_topic_webview())
 #print(test_post_comment())
 #print(test_collect())
 #print(test_get_collect())
 #print(test_cancle_collect())
-print(test_praise())
+#print(test_praise())
 #print(test_get_praise_topic())
 #print(test_cancle_praise())

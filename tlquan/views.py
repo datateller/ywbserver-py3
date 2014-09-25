@@ -23,6 +23,7 @@ from users.utils import *
 from utils.serialization import *
 from photos.models import *
 from .models import *
+from rss.models import *
 import json, base64, traceback, random, datetime, time
 
 
@@ -117,15 +118,20 @@ def list_topic(request):
         topics_list = list(topics)
         topics_list.sort(key=lambda topic:topic.update_time, reverse=True)
         paginator = Paginator(topics_list, number)
+        newsret = circlenews_encode(get_news_byage(age))
+        print(newsret)
         try:
-            #return HttpResponse(json_serialize(status = 'OK', result = {'userid':user.id, 'topics':circletopiclist_encode(paginator.page(page))}))
-            return HttpResponse(json_serialize(status = 'OK', result = {'topics':circletopiclist_encode(paginator.page(page))}))
+            topicsret = circletopiclist_encode(paginator.page(page))
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             #return HttpResponse(json_serialize(status = 'OK', result = {'userid':user.id, 'topics':circletopiclist_encode(paginator.page(paginator.num_pages))}))
-            return HttpResponse(json_serialize(status = 'OK', result = {'topics':circletopiclist_encode(paginator.page(paginator.num_pages))}))
+            topicsret = circletopiclist_encode(paginator.page(paginator.num_pages))
+        finally:
+            topicsret.insert(0, newsret)
+            return HttpResponse(json_serialize(status = 'OK', result = {'topics':topicsret}))
     except Exception as e:
         print(str(e))
+        traceback.print_exc()
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 
