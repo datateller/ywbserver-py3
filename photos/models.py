@@ -29,6 +29,7 @@ class Head(models.Model):
 def getheadurl(user, type):
     if not user:
         full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
+        return full_url
     heads = Head.objects.filter(username = user.username)
     if len(heads) == 0:
         full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
