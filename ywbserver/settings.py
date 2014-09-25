@@ -66,6 +66,7 @@ INSTALLED_APPS = (
     'registration',
     'south',
     'personality',
+    'rss',
 )
 
 MIDDLEWARE_CLASSES = (
