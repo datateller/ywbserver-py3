@@ -39,6 +39,26 @@ def test_add_comment():
     fp.write(r.text)
     fp.close()
 
+def test_get_comment():
+    username = 'shentest1'
+    password = 'shentest1'
+    username = http.urlsafe_base64_encode(username.encode()).decode()
+    password = http.urlsafe_base64_encode(password.encode()).decode()
+    loginurl = 'http://localhost:8000/user/login/'
+    #loginurl = 'http://www.yangwabao.com:80/user/login/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    payload = {'username': username, 'password': password}
+    r = requests.post(loginurl, data=payload, headers = headers)
+    cookies = r.cookies
+    url = 'http://localhost:8000/tlquan/listcomment/?page=1&number=3&id=-41'
+    #url = 'http://www.yangwabao.com:80/tlquan/listtopic/'
+    headers = {'content-Type': 'application/x-www-form-urlencoded'}
+    r = requests.get(url, data=payload, headers = headers, cookies = cookies)
+    fp = open("test.html",'w')
+    fp.write(r.text)
+    fp.close()
+    return r.text
+
 def test_get_topiclist():
     username = 'shentest1'
     password = 'shentest1'
@@ -98,9 +118,9 @@ def test_post_comment():
     r = requests.post(loginurl, data=payload, headers = headers)
     cookies = r.cookies
     content = '呵呵，测试post评论。'
-    photo = open('photo.jpg', 'rb')
-    files = {'photo' : photo}
-    topicid = 1
+#     photo = open('photo.jpg', 'rb')
+#     files = {'photo' : photo}
+    topicid = -41
     #url = 'http://www.yangwabao.com/tlquan/posttopic/'
     url = 'http://localhost:8000/tlquan/postcomment/'
     payload = {'username': username, 'password': password, 'content': content, 'topicid':topicid}
@@ -158,7 +178,7 @@ def test_get_collect():
     payload = {'username': username, 'password': password}
     r = requests.post(loginurl, data=payload, headers = headers)
     cookies = r.cookies
-    url = 'http://localhost:8000/tlquan/listcollect/?number=3&page=0'
+    url = 'http://localhost:8000/tlquan/listcollect/?number=3&page=1'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
     payload = {}
     r = requests.get(url, data=payload, headers = headers, cookies = cookies)
@@ -179,7 +199,7 @@ def test_praise():
     cookies = r.cookies
     url = 'http://localhost:8000/tlquan/postpraise/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': 2}
+    payload = {'id': -42}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -198,7 +218,7 @@ def test_cancle_praise():
     cookies = r.cookies
     url = 'http://localhost:8000/tlquan/cancelpraise/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': 2}
+    payload = {'id': -41}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -227,7 +247,7 @@ def test_get_praise_topic():
 #print(test_post_topic())
 #print(test_add_comment())
 #print(test_get_topic())
-print(test_get_topiclist())
+#print(test_get_topiclist())
 #print(test_get_topic_webview())
 #print(test_post_comment())
 #print(test_collect())
@@ -236,3 +256,4 @@ print(test_get_topiclist())
 #print(test_praise())
 #print(test_get_praise_topic())
 #print(test_cancle_praise())
+print(test_get_comment())

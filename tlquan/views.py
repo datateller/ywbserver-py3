@@ -151,17 +151,77 @@ def post_comment(request):
         if not topicid:
             return HttpResponse(json_serialize(status = 'EXCEPTION'))
         timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
-        comment = TlComment(from_user = user,
+        topicid = int(topicid)
+        if topicid > 0:
+            comment = TlComment(from_user = user,
                              content =  content,
                              create_time = timenow,
                              topic = TlTopic.objects.get(id = topicid)
                              )
-
-        ret = comment.save()
+            ret = comment.save()
+        else:
+            comment = TlNewsComment(from_user = user,
+                             content =  content,
+                             create_time = timenow,
+                             news = TLNews.objects.get(id = 0 - topicid)
+                             )
+            ret = comment.save()
         return HttpResponse(json_serialize(status = 'OK'))
     except Exception as e:
         print('Exception:' + str(e))
         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+##获取帖子的评论
+def list_comment(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        #获取topicid
+        topicid = None
+        if not request.GET.get('id') :
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'), result = {'description':'null id'})
+        else:
+            topicid = int(request.GET.get('id'))
+        #获取page参数
+        page = request.GET.get('page')
+        if not page:
+            page = 1
+        else:
+            page = int(page)
+        #获取number参数
+        number = request.GET.get('number')
+        if not number:
+            number = 5
+        else:
+            number = int(number)
+        if topicid > 0: #id为正说明是一个圈子帖子
+            topic = TlTopic.objects.get(id = topicid)
+            comments = TlComment.objects.filter(topic = topic)
+        else:#id为负说明是一个圈子新闻
+            newsid = 0 - topicid
+            news = TLNews.objects.get(id = newsid)
+            comments = TlNewsComment.objects.filter(news = news)
+        comments_list = list(comments)
+        comments_list.sort(key=lambda comment:comment.create_time, reverse=True)
+        paginator = Paginator(comments_list, number)
+        try:
+            ret = comments_encode(paginator.page(page))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            #return HttpResponse(json_serialize(status = 'OK', result = {'userid':user.id, 'topics':circletopiclist_encode(paginator.page(paginator.num_pages))}))
+            ret = comments_encode(paginator.page(paginator.num_pages))
+        finally:
+            print(ret)
+            return HttpResponse(json_serialize(status = 'OK', result = {'comments':ret}))
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc()
+        return HttpResponse(json_serialize(status = 'EXCEPTION'))
+
 
 #点赞接口，app native
 @csrf_exempt   ###保证对此接口的访问不需要csrf
@@ -176,11 +236,19 @@ def post_praise(request):
         if not topicid:
             return HttpResponse(json_serialize(status = 'EXCEPTION'))
         timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
-        comment = TlPraise(from_user = user,
+        topicid = int(topicid)
+        if topicid > 0:
+            praise = TlPraise(from_user = user,
                              create_time = timenow,
                              topic = TlTopic.objects.get(id = topicid)
                              )
-        ret = comment.save()
+            ret = praise.save()
+        else:
+            praise = TlNewsPraise(from_user = user,
+                             create_time = timenow,
+                             news = TLNews.objects.get(id = 0 - topicid)
+                             )
+            ret = praise.save()
         return HttpResponse(json_serialize(status = 'OK'))
     except Exception as e:
         print('Exception:' + str(e))
@@ -198,8 +266,13 @@ def cancel_praise(request):
         topicid = request.POST.get('id')
         if not topicid:
             return HttpResponse(json_serialize(status = 'EXCEPTION'))
-        praise = TlPraise.objects.get(topic = TlTopic.objects.get(id = topicid), from_user = user)
-        ret = praise.delete()
+        topicid = int(topicid)
+        if topicid > 0:
+            praise = TlPraise.objects.get(topic = TlTopic.objects.get(id = topicid), from_user = user)
+            ret = praise.delete()
+        else:
+            praise = TlNewsPraise.objects.get(news = TLNews.objects.get(id = 0 - topicid), from_user = user)
+            ret = praise.delete()
         return HttpResponse(json_serialize(status = 'OK'))
     except Exception as e:
         print('Exception:' + str(e))
@@ -221,12 +294,20 @@ def list_praise_topic(request):
         page = int(request.GET.get('page'))
         number = int(request.GET.get('number'))
         topics = TlTopic.objects.filter(TlPraiseTopic__from_user = user)
-        paginator = Paginator(topics, number)
+        news = TLNews.objects.filter(TlNewsPraiseNews__from_user = user)
+        rets = []
+        if topics:
+            rets.extend(circletopiclist_encode(topics))
+        if news:
+            rets.extend(circlenewslist_encode(news))
+        if len(rets) > 1:
+            rets.sort(key=(lambda x:x['create_time']))
+        paginator = Paginator(rets, number)
         try:
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(page))))
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(paginator.num_pages))))
     except Exception as e:
         print('Exception:' + str(type(e)) + str(e))
         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
@@ -245,18 +326,33 @@ def collect_topic(request):
             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
         topicid = request.POST.get('id')
         topicid = int(topicid)
-        try:
-            collection_record = TlTopicCollection.objects.get(user = user)
-        except TlTopicCollection.DoesNotExist:
-            new_collection_record = TlTopicCollection(user = user, collections = [])
-            new_collection_record.collections.append(topicid)
-            new_collection_record.save()
-            return HttpResponse(json_serialize(status = 'OK'))
-        else:
-            if topicid not in collection_record.collections:
-                collection_record.collections.append(topicid)
-                collection_record.save()
-            return HttpResponse(json_serialize(status = 'OK'))
+        if topicid > 0:
+            try:
+                 collection_record = TlTopicCollection.objects.get(user = user)
+            except TlTopicCollection.DoesNotExist:
+                new_collection_record = TlTopicCollection(user = user, collections = [])
+                new_collection_record.collections.append(topicid)
+                new_collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+            else:
+                if topicid not in collection_record.collections:
+                    collection_record.collections.append(topicid)
+                    collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        else:   #topicid小于0说明是圈子新闻
+            newsid = 0 - topicid
+            try:
+                collection_record = TlNewsCollection.objects.get(user = user)
+            except TlNewsCollection.DoesNotExist:
+                new_collection_record = TlNewsCollection(user = user, collections = [])
+                new_collection_record.collections.append(newsid)
+                new_collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+            else:
+                if newsid not in collection_record.collections:
+                    collection_record.collections.append(newsid)
+                    collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
     except Exception as e:
         print('Exception:' + str(e))
         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
@@ -274,16 +370,30 @@ def cancel_collection(request):
             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
         topicid = request.POST.get('id')
         topicid = int(topicid)
-        try:
-            collection_record = TlTopicCollection.objects.get(user = user)
-        except TlTopicCollection.DoesNotExist:
-            return HttpResponse(json_serialize(status='NOT_COLLECTED'))
-        else:
-            if topicid not in collection_record.collections:
+        if topicid > 0: #大于0代表是圈子帖子
+            try:
+                collection_record = TlTopicCollection.objects.get(user = user)
+            except TlTopicCollection.DoesNotExist:
                 return HttpResponse(json_serialize(status='NOT_COLLECTED'))
-            collection_record.collections.remove(topicid)
-            collection_record.save()
-            return HttpResponse(json_serialize(status = 'OK'))
+            else:
+                if topicid not in collection_record.collections:
+                    return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+                collection_record.collections.remove(topicid)
+                collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        else: #小于零代表是圈子新闻
+            newsid = 0 - topicid
+            try:
+                collection_record = TlNewsCollection.objects.get(user = user)
+            except TlNewsCollection.DoesNotExist:
+                return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+            else:
+                if newsid not in collection_record.collections:
+                    return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+                collection_record.collections.remove(newsid)
+                collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        
     except Exception as e:
         print('Exception:' + str(e))
         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
@@ -302,20 +412,36 @@ def list_collection(request):
             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
         page = int(request.GET.get('page'))
         number = int(request.GET.get('number'))
+        topicids = []
+        newsids = []
         try:
-            collection = user.tltopiccollection
+            topiccollection = user.tltopiccollection
         except TlTopicCollection.DoesNotExist:
-            return HttpResponse(json_serialize(status = 'OK', result = {}))
-        if not collection:
-            return HttpResponse(json_serialize(status = 'OK', result = {}))
-        topicids = collection.collections
-        topics = get_topics_byids(topicids)
-        paginator = Paginator(topics, number)
+            topicids = []
         try:
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+            newscollection = user.tlnewscollection
+        except TlNewsCollection.DoesNotExist:
+            newsids = []
+        if not topiccollection and not newscollection:
+            return HttpResponse(json_serialize(status = 'OK', result = {}))
+        rets = []
+        topicids = topiccollection.collections
+        newsids = newscollection.collections
+        topics = get_topics_byids(topicids)
+        news = get_news_byids(newsids)
+        if topics:
+            rets.extend(circletopiclist_encode(topics))
+        if news:
+            rets.extend(circlenewslist_encode(news))
+        if len(rets) > 1:
+            rets.sort(key=(lambda x:x['create_time']) )
+        paginator = Paginator(rets, number)
+        try:
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(page))))
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(paginator.num_pages))))
     except Exception as e:
         print('Exception:' + str(type(e)) + str(e))
+        traceback.print_exc()
         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))

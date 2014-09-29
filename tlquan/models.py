@@ -87,7 +87,7 @@ def circletopic_encode(topics):
 #序列化圈子新闻
 def circlenews_encode(news):
     t = {}
-    t['topicid'] = -1
+    t['topicid'] = -news.id
     t['from_user'] = "养娃宝新闻精选"
     t['from_user_id'] = 0
     t['headurl'] = getheadurl(None, 'thumbnail')
@@ -97,6 +97,25 @@ def circlenews_encode(news):
     t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
     t['link'] = news.link
     return t
+    
+    #序列化圈子新闻
+def circlenewslist_encode(newslist):
+    rets = []
+    number = len(list(newslist))
+    for i in range(0, number):
+        news = newslist[i]
+        t = {}
+        t['topicid'] = -news.id
+        t['from_user'] = "养娃宝新闻精选"
+        t['from_user_id'] = 0
+        t['headurl'] = getheadurl(None, 'thumbnail')
+        t['content'] = news.title
+        t['comments_num'] = 0
+        t['create_time'] = news.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['link'] = news.link
+        rets.append(t)
+    return rets
     
 def get_topics_byids(ids):
     if not ids:

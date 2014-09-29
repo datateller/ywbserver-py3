@@ -13,6 +13,7 @@ urlpatterns = patterns('',
     url(r'^posttopic/', post_topic, name='post_topic'),
     url(r'^listtopic/', list_topic, name='list_topic'),
     url(r'^postcomment/$', post_comment, name='post_comment'),
+    url(r'^listcomment/$', list_comment, name='list_comment'),
     
     url(r'^collect/',collect_topic, name='collectknowl'),
     url(r'^listcollect/',list_collection, name='list_collection'),
