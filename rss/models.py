@@ -47,3 +47,48 @@ def get_news_byids(ids):
     news_list.sort(key=lambda news: -ids.index(news.id))
     return news_list
 
+
+
+class LocalNews(models.Model):
+    city = models.TextField()
+    keyword = models.TextField()
+    title = models.TextField(unique=True)
+    summary = models.TextField()
+    link = models.TextField()
+    published_time = models.DateTimeField(default=datetime.datetime.utcnow().replace(tzinfo=utc))
+    create_time = models.DateTimeField(default=datetime.datetime.utcnow().replace(tzinfo=utc))
+
+
+class LocalNewsKeyword(models.Model):
+    word = models.TextField()
+    city = models.TextField()
+
+
+class LocalNewsComment(CommentBase):
+    news = models.ForeignKey(LocalNews)
+
+
+class LocalNewsPraise(PraiseBase):
+    news = models.ForeignKey(LocalNews, related_name="LocalNewsPraiseNews")
+
+
+class LocalNewsCollection(models.Model):
+    user = models.OneToOneField(User)
+    collections = dbarray.IntegerArrayField()
+
+
+def get_localnews_bycity(city):
+    if city == None:
+        return None
+    print(city)
+    news =LocalNews.objects.filter(city = city).order_by('-published_time')[0]
+    return news
+
+
+def get_localnews_byids(ids):
+    if not ids:
+        return None
+    news = LocalNews.objects.filter(id__in = ids)
+    news_list = list(news)
+    news_list.sort(key=lambda news: -ids.index(news.id))
+    return news_list
