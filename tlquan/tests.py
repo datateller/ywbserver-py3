@@ -199,7 +199,7 @@ def test_praise():
     cookies = r.cookies
     url = 'http://localhost:8000/tlquan/postpraise/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': -42}
+    payload = {'id': 2}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -254,6 +254,6 @@ def test_get_praise_topic():
 #print(test_get_collect())
 #print(test_cancle_collect())
 #print(test_praise())
-#print(test_get_praise_topic())
+print(test_get_praise_topic())
 #print(test_cancle_praise())
-print(test_get_comment())
+#print(test_get_comment())

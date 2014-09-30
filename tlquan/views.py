@@ -117,17 +117,17 @@ def list_topic(request):
         topics = TlTopic.objects.filter(age = age)
         topics_list = list(topics)
         topics_list.sort(key=lambda topic:topic.update_time, reverse=True)
-        paginator = Paginator(topics_list, number)
+        rets = circletopiclist_encode(topics_list)
         newsret = circlenews_encode(get_news_byage(age))
-        print(newsret)
+        rets.insert(0, newsret)
+        paginator = Paginator(rets, number)
         try:
-            topicsret = circletopiclist_encode(paginator.page(page))
+            topicsret = list(paginator.page(page))
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
             #return HttpResponse(json_serialize(status = 'OK', result = {'userid':user.id, 'topics':circletopiclist_encode(paginator.page(paginator.num_pages))}))
-            topicsret = circletopiclist_encode(paginator.page(paginator.num_pages))
+            topicsret = list(paginator.page(paginator.num_pages))
         finally:
-            topicsret.insert(0, newsret)
             return HttpResponse(json_serialize(status = 'OK', result = {'topics':topicsret}))
     except Exception as e:
         print(str(e))
@@ -238,17 +238,24 @@ def post_praise(request):
         timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
         topicid = int(topicid)
         if topicid > 0:
-            praise = TlPraise(from_user = user,
+            if not TlPraise.objects.filter(from_user = user, topic = TlTopic.objects.get(id = topicid)):
+                praise = TlPraise(from_user = user,
                              create_time = timenow,
                              topic = TlTopic.objects.get(id = topicid)
                              )
-            ret = praise.save()
+                ret = praise.save()
+            else:
+                return HttpResponse(json_serialize(status = 'OK', result = 'DUP_PRAISE'))
         else:
-            praise = TlNewsPraise(from_user = user,
+            newsid = 0 - topicid
+            if not TlNewsPraise.objects.filter(from_user = user, news = TLNews.objects.get(id = newsid)):
+                praise = TlNewsPraise(from_user = user,
                              create_time = timenow,
-                             news = TLNews.objects.get(id = 0 - topicid)
+                             news = TLNews.objects.get(id = newsid)
                              )
-            ret = praise.save()
+                ret = praise.save()
+            else:
+                return HttpResponse(json_serialize(status = 'OK', result = 'DUP_PRAISE'))
         return HttpResponse(json_serialize(status = 'OK'))
     except Exception as e:
         print('Exception:' + str(e))
