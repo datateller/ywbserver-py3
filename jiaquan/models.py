@@ -7,8 +7,8 @@ from django.utils.timezone import utc
 from django.core.paginator import Paginator, EmptyPage
 from quan.models import *
 from photos.models import *
-import dbarray
-import datetime
+from rss.models import *
+import dbarray, json, datetime
 # Create your models here.
 
 class Circle(models.Model):
@@ -89,16 +89,111 @@ class JiaTopicCollection(models.Model):
     user = models.OneToOneField(User)
     collections = dbarray.IntegerArrayField()
 
-def get_nearby_topic(longitude, latitude, page_size = 5):
+def get_nearby_topic(longitude, latitude, page_size = 5, city = None):
     point = fromstr("POINT(%s %s)" % (longitude, latitude))
     topics = JiaTopic.objects.distance(point).order_by('distance')
-    paginator = Paginator(topics, page_size)
+    topics_list = list(topics)
+    topics_list.sort(key=lambda topic:topic.update_time, reverse=True)
+    rets = circletopiclist_encode(topics_list)
+    newsret = circlenews_encode(get_localnews_bycity(city))
+    if newsret:
+        rets.insert(0, newsret)
+    paginator = Paginator(rets, page_size)
     return paginator
 
-def get_nearby_point_topic(point, page_size = 5):
+def get_nearby_point_topic(point, page_size = 5, city = None):
     topics = JiaTopic.objects.distance(point).order_by('distance')
-    paginator = Paginator(topics, page_size)
+    topics_list = list(topics)
+    topics_list.sort(key=lambda topic:topic.update_time, reverse=True)
+    rets = circletopiclist_encode(topics_list)
+    newsret = circlenews_encode(get_localnews_bycity(city))
+    if newsret:
+        rets.insert(0, newsret)
+    paginator = Paginator(rets, page_size)
     return paginator
+
+
+def comments_encode(JiaComments):
+    rets = []
+    number = len(list(JiaComments))
+    for i in range(0, number):
+        JiaComment = JiaComments[i]
+        c = {}
+        c['from_user'] = JiaComment.from_user.username
+        c['content'] = JiaComment.content
+        c['create_time'] = JiaComment.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+        print(c)
+        rets.append(c)
+    return rets
+
+
+def circletopiclist_encode(topics):
+    rets = []
+    number = len(list(topics))
+    for i in range(0, number):
+        topic = topics[i]
+        t = {}
+        t['topicid'] = topic.id
+        t['from_user'] = topic.from_user.username
+        t['headurl'] = getheadurl(topic.from_user, 'thumbnail')
+        t['content'] = topic.content
+        t['JiaComments_num'] = len(JiaComment.objects.filter(topic = topic))
+        t['create_time'] = topic.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['update_time'] = topic.update_time.strftime('%Y-%m-%d %H:%M:%S' )
+        rets.append(t)
+    #return json.dumps(rets, ensure_ascii=False)
+    return rets
+
+
+def circletopic_encode(topics):
+    rets = []
+    number = len(list(topics))
+    for i in range(0, number):
+        topic = topics[i]
+        t = {}
+        t['topicid'] = topic.id
+        t['from_user'] = topic.from_user.username
+        t['content'] = topic.content
+        t['create_time'] = topic.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['update_time'] = topic.update_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['JiaComments'] = comments_encode(JiaComment.objects.filter(topic = topic))
+        print(t)
+        rets.append(t)
+    return json.dumps(rets, ensure_ascii=False)
+
+
+#序列化圈子新闻
+def circlenews_encode(news):
+    t = {}
+    t['topicid'] = -news.id
+    t['from_user'] = "养娃宝新闻精选"
+    t['from_user_id'] = 0
+    t['headurl'] = getheadurl(None, 'thumbnail')
+    t['content'] = news.title
+    t['comments_num'] = 0
+    t['create_time'] = news.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+    t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
+    t['link'] = news.link
+    return t
+    
+    #序列化圈子新闻
+def circlenewslist_encode(newslist):
+    rets = []
+    number = len(list(newslist))
+    for i in range(0, number):
+        news = newslist[i]
+        t = {}
+        t['topicid'] = -news.id
+        t['from_user'] = "养娃宝新闻精选"
+        t['from_user_id'] = 0
+        t['headurl'] = getheadurl(None, 'thumbnail')
+        t['content'] = news.title
+        t['comments_num'] = 0
+        t['create_time'] = news.create_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
+        t['link'] = news.link
+        rets.append(t)
+    return rets
 
 
 def get_topics_byids(ids):

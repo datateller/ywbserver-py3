@@ -189,7 +189,7 @@ def test_cancle_collect():
     cookies = r.cookies
     url = 'http://localhost:8000/jiaquan/cancel/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': 2}
+    payload = {'id': -41}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -227,7 +227,7 @@ def test_praise():
     cookies = r.cookies
     url = 'http://localhost:8000/jiaquan/postpraise/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': 2}
+    payload = {'id': -42}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -246,7 +246,7 @@ def test_cancle_praise():
     cookies = r.cookies
     url = 'http://localhost:8000/jiaquan/cancelpraise/'
     headers = {'content-Type': 'application/x-www-form-urlencoded'}
-    payload = {'id': 2}
+    payload = {'id': -42}
     r = requests.post(url, data=payload, headers = headers, cookies = cookies)
     fp = open("test.html",'w')
     fp.write(r.text)
@@ -282,6 +282,6 @@ def test_get_praise_topic():
 #print(test_collect())
 #print(test_get_collect())
 #print(test_cancle_collect())
-#print(test_praise())
-print(test_get_praise_topic())
+print(test_praise())
+#print(test_get_praise_topic())
 #print(test_cancle_praise())
