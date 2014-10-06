@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Off Canvas Template for Bootstrap</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/offcanvas.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="container">
+    
+    <div class="row">  
+		<div class="col-sm-4 col-xs-4">
+      		<img src="{{headurl}}" class="img-thumbnail">
+      		<h3 >{{topic.from_user.username}}</h3> 
+      	</div>
+      	<div class="col-sm-8 col-xs-8">
+			<small><code>{{topic.create_time}}</code></small>
+			<h4>{{topic.content}}</h4>
+			{% for photo in topic.photo_set.all %}
+                <img src="{{photo.photo_orig.url}}" width="80%" height="80%">
+            {% endfor %}
+      	</div>
+    </div>
+    
+    <div class="row">  
+      	<div class="col-sm-4 col-sm-offset-4">
+			<div class="row text-right">  
+      			<div class="accordion" id="accordion2">
+					<div class="accordion-group">
+						<div class="accordion-heading">
+					    	<button type="button" class="btn btn-default accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseOne">评论</button>
+					    </div>
+					    <div id="collapseOne" class="accordion-body collapse collapse">
+					    	<div class="accordion-inner">
+					        	<form action="/jiaquan/addcommentwebview/{{current_uid}}/{{topic.id}}/" method="post">
+                    			<textarea name="comment" cols="40" rows="1"></textarea>
+                    			<input type="submit" value="发布" />
+								</form>
+					      	</div>
+					    </div>
+					</div>
+				</div>
+      		</div>
+
+        	<div class="row">
+            	<table class="table">
+                      	<tbody>
+                      		{% for comment in topic.comment_set.all %}
+                      		<tr><td>{{comment.from_user.username}}</td> <td>{{comment.content}}</td></tr>
+                      		{% endfor %}
+                      	</tbody>
+                    </table>
+			</div>
+		</div>	
+    </div>
+</div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+    <script src="/static/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/static/js/offcanvas.js"></script>
+  </body>
+</html>
+
