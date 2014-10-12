@@ -33,11 +33,12 @@ def topic_webview(request, userid, topicid):
         topic = TlTopic.objects.get(id = topicid)
         if not topic:
             return HttpResponse(json_serialize(status = 'INVALID_TOPICID'))
+        comments = TlComment.objects.filter(topic = topic)
     except Exception as e:
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
     try:
         user = User.objects.get(id=userid)
-        if not topic:
+        if not user:
             return HttpResponse(json_serialize(status = 'INVALID_USERID'))
     except Exception as e:
             return HttpResponse(json_serialize(status = 'EXCEPTION'))
@@ -45,6 +46,10 @@ def topic_webview(request, userid, topicid):
     context['headurl'] = getheadurl(topic.from_user, 'thumbnail')
     context['topic'] = topic
     context['current_uid'] = userid
+    if comments:
+        for comment in comments:
+            comment.headurl = getheadurl(comment.from_user, 'thumbnail')
+        context['comments'] = comments
     t = get_template("tlquan/topic_webview.html")
     return HttpResponse(t.render(Context(context)))
 
