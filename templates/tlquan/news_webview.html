@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>养娃宝</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/static/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/static/css/offcanvas.css" rel="stylesheet">
+  </head>
+
+  <body>
+<div class="container">
+    <div class="row">  
+      	<div class="col-sm-3 col-xs-3">
+      		<img src="{{headurl}}" class="img-thumbnail">
+      	</div>
+      	<div class="col-sm-9 col-xs-9">
+      		<div class="row">
+      			<a href="#" >
+      				<h4>{{username}}</h4>
+      			</a>
+      		</div>
+      		<div class="row">
+      			<small class="text-muted">{{news.published_time}}</small>
+      		</div>
+      	</div>
+    </div>
+    
+    <div class="row">
+      	<div class="col-sm-12 col-xs-12">
+      		<h4>{{news.text}}</h4>
+      		<a href="{{news.link}}" > <h4>原文 </h4></a>
+      	</div>
+	</div>
+    
+    <div class="row">
+      	<div class="col-sm-12 col-xs-12 	text-center">
+      		{%if news.piclink%}
+				<a href="{{news.piclink}}" >
+                	<img src="{{news.piclink}}" class="img-thumbnail" >
+                </a>
+             {%endif%}
+      	</div>
+	</div>
+    
+    
+    <div class="row">
+    	<div class="col-sm-12 col-xs-12">
+        {% for comment in comments %}
+        	<div class="row">
+        		<hr align="center" color="#987cb9" size="4" />
+        	</div>
+        	<div class="row">
+    			<div class="col-sm-3 col-xs-3">
+      				<img src="{{comment.headurl}}" class="img-thumbnail">
+      			</div>
+      			<div class="col-sm-9 col-xs-9">
+      				<div class="row">
+      					<div class="col-sm-12 col-xs-12">
+      						<h4>{{comment.from_user.username}}</h4>
+      						<small class="text-muted">{{comment.create_time}}</small>
+      					</div>
+      				</div>
+      				<div class="row">
+      					<div class="col-sm-12 col-xs-12">
+      						<h4>{{comment.content}}</h4>
+      					</div>
+      				</div>
+      			</div>
+    		</div>
+        {% endfor %}
+        </div>
+	</div>
+    
+</div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://cdn.bootcss.com/jquery/1.10.2/jquery.min.js"></script>
+    <script src="/static/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="/static/js/offcanvas.js"></script>
+  </body>
+</html>
+

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point, fromstr
 from django.contrib.gis.measure import D
+from ywbserver.settings import *
 import datetime, json, dbarray
 from django.utils.timezone import utc
 from photos.models import *
@@ -91,11 +92,11 @@ def circlenews_encode(news):
     t['from_user'] = "养娃宝新闻精选"
     t['from_user_id'] = 0
     t['headurl'] = getheadurl(None, 'thumbnail')
-    t['content'] = news.title
+    t['content'] = news.text
     t['comments_num'] = 0
     t['create_time'] = news.create_time.strftime('%Y-%m-%d %H:%M:%S' )
     t['update_time'] = news.published_time.strftime('%Y-%m-%d %H:%M:%S' )
-    t['link'] = news.link
+    t['link'] = DOMAIN + '/rss/tlnews/webview/?id=' + str(-news.id)
     return t
     
     #序列化圈子新闻

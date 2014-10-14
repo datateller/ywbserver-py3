@@ -24,12 +24,16 @@
       	<div class="col-sm-3 col-xs-3">
       		<img src="{{headurl}}" class="img-thumbnail">
       	</div>
+      	
       	<div class="col-sm-6 col-xs-6">
       		<div class="row">
       			<a href="#" >
       				<h2>{{topic.from_user.username}}</h2>
       			</a>
       		</div>
+      		<div class="row">
+	      		<h5>{{topic.create_time}}</h5>
+	      	</div>
       		<div class="row">
       			<div class="row">
 					<h4>{{topic.content}}</h4>
@@ -41,13 +45,9 @@
                 		</a>
             		{% endfor %}
 				</div>
-      			<div class="row">
-      				<h5>{{topic.create_time}}</h5>
-      			</div>
       		</div>
       	</div>
 		<div class="col-sm-2 col-xs-2">
-		
       	</div>
     </div>
 </div>

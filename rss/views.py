@@ -5,7 +5,9 @@ from .models import *
 from utils.serialization import *
 from django.http import *
 from django.db import transaction
-
+from django.template import Context
+from django.template.loader import get_template
+from photos.models import *
 
 @transaction.non_atomic_requests
 def refresh_tlquan_news(request):
@@ -65,3 +67,33 @@ def refresh_jiaquan_news(request):
                 print('Exception:' + str(e))
             print(news.title)
     return HttpResponse(json_serialize(status = 'EXCEPTION'))
+
+
+#根据topicid显示一个topic的详细信息webview
+def tlnews_webview(request):
+    try:
+        newsid = request.GET.get('id')
+        newsid = 0 - (int)(newsid)
+        news = TLNews.objects.get(id = newsid)
+        if not news:
+            return HttpResponse(json_serialize(status = 'INVALID_TOPICID'))
+        comments = TlNewsComment.objects.filter(news = news)
+    except Exception as e:
+        return HttpResponse(json_serialize(status = 'EXCEPTION'))
+    context = {}
+    context['headurl'] = getheadurl(None, 'thumbnail')
+    context['news'] = news
+    context['username'] = '养娃宝新闻社'
+    if comments:
+        for comment in comments:
+            comment.headurl = getheadurl(comment.from_user, 'thumbnail')
+        context['comments'] = comments
+    t = get_template("tlquan/news_webview.html")
+    return HttpResponse(t.render(Context(context)))
+
+
+
+
+
+
+
