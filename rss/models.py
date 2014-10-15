@@ -37,7 +37,11 @@ class TlNewsCollection(models.Model):
 def get_news_byage(age):
     if age == None:
         return None
-    news =TLNews.objects.filter(age = age).order_by('-published_time')[0]
+    newslist = TLNews.objects.filter(age = age).order_by('-published_time')
+    if not newslist:
+        news =TLNews.objects.all().order_by('-published_time')[0]
+    else:
+        news =newslist[0]
     return news
 
 

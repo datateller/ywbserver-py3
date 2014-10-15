@@ -19,6 +19,7 @@ def refresh_tlquan_news(request):
         rssurl = "http://news.baidu.com/ns?word=title{0}&tn=newsrss&sr=0&cl=2&rn=20&ct=0".format(keywordsurl)
         d = feedparser.parse(rssurl)
         for entry in d.entries:
+            print(entry)
             published_time = datetime.datetime(*tuple(entry.published_parsed)[:6]).replace(tzinfo=utc)
             title = entry.title
             summary = entry.summary
@@ -35,7 +36,7 @@ def refresh_tlquan_news(request):
                 ret = news.save()
             except Exception as e:
                 print('Exception:' + str(e))
-            print(news.title)
+            break
     return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 
