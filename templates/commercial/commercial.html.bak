@@ -1,0 +1,94 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1" />
+</head>
+<body>
+<div align="center">
+<img src={{pic}}  style="width: 300px; height: 241px, display:inline">
+</div>
+
+<div class="title">
+<span align="center">
+<h3 style="font-weight: bold">
+{{commercial_title}}<br/>
+</h3>
+</span>
+</div>
+
+<div class="address">
+<span>
+<p style="font-style: italic">
+地址：<span style="color:red">{{commercial_address}}</span>
+</p>
+</span>
+</div>
+
+<div class="intro">
+<span>
+<p style="font-weight: 100">
+说明：{{commercial_content}}
+</p>
+</span>
+</div>
+
+
+<div class="intro">
+<span>
+<p style="font-weight: 100">
+联系电话：{{commercial_phonenumber}}
+</p>
+</span>
+</div>
+
+
+<div class="intro">
+<span>
+<p style="font-weight: 100">
+{% if commercial_fromdate %}
+起始日期：{{commercial_fromdate}}
+{% endif %}
+{% if commercial_enddate %}
+<br/>
+截止日期：{{commercial_enddate}}
+{% endif %}
+</p>
+</span>
+</div>
+
+
+
+<div class="detailinfo">
+<span>
+<a href="/merchant/merchantdetail/{{merchant_id}}/">商家信息</a>
+</span>
+<br></br>
+</div>
+
+<div class="comment" style="border-top: 1px solid #080808">
+<label>发表评论</label>
+
+<form action="/appcommercial/addcomment/{{commercial_commercialid}}/" method="post">
+<textarea name="commercialcomment" cols="40" rows="3"></textarea>
+<input type="submit" value="发布" style="float: right"/>
+</form>
+<br></br>
+</div> <!-- end comment div -->
+
+<div class="commentshow" style="border-top: 1px solid #080808">
+<label>所有评论:{{comments_size}}条</label>
+{% if comments_size > 0 %}
+<div style="border:1px solid #080808">
+<ul>
+{% for comment in comments %}
+<li>{{comment.comment}}</li>
+{% endfor %}
+</ul>
+</div>
+{% endif %}
+</div>
+
+</body>
+</html>
