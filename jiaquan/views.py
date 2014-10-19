@@ -22,6 +22,7 @@ from jiaquan import *
 from users.utils import *
 from utils.serialization import *
 from .models import *
+from rss.models import *
 import json, base64, traceback, random
 import datetime,time
 
@@ -83,15 +84,15 @@ def get_topicbyid_webview(request, userid, topicid):
     try:
         topic = JiaTopic.objects.get(id = topicid)
         if not topic:
-            return HttpResponse("INVALID_ID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_ID'))
     except Exception as e:
-        return HttpResponse("INVALID_ID")
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_ID'))
     try:
         user = User.objects.get(id=userid)
         if not topic:
-            return HttpResponse("INVALID_USERID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_USERID'))
     except Exception as e:
-            return HttpResponse("INVALID_USERID")
+            return HttpResponse(json_serialize(status = 'EXCEPTION', result = 'INVALID_USERID'))
     context = {}
     context['headurl'] = getheadurl(topic.from_user, 'thumbnail')
     context['topic'] = topic
@@ -134,55 +135,6 @@ def add_comment(request):
         return HttpResponse('OK')
     else:
         return HttpResponse('ADD_COMMENT_ERROR')
-
-
-def comments_encode(JiaComments):
-    rets = []
-    number = len(list(JiaComments))
-    for i in range(0, number):
-        JiaComment = JiaComments[i]
-        c = {}
-        c['from_user'] = JiaComment.from_user.username
-        c['content'] = JiaComment.content
-        c['create_time'] = JiaComment.create_time.strftime('%Y-%m-%d %H:%M:%S' )
-        print(c)
-        rets.append(c)
-    return rets
-
-
-def circletopiclist_encode(topics):
-    rets = []
-    number = len(list(topics))
-    for i in range(0, number):
-        topic = topics[i]
-        t = {}
-        t['topicid'] = topic.id
-        t['from_user'] = topic.from_user.username
-        t['headurl'] = getheadurl(topic.from_user, 'thumbnail')
-        t['content'] = topic.content
-        t['JiaComments_num'] = len(JiaComment.objects.filter(topic = topic))
-        t['create_time'] = topic.create_time.strftime('%Y-%m-%d %H:%M:%S' )
-        t['update_time'] = topic.update_time.strftime('%Y-%m-%d %H:%M:%S' )
-        rets.append(t)
-    #return json.dumps(rets, ensure_ascii=False)
-    return rets
-
-
-def circletopic_encode(topics):
-    rets = []
-    number = len(list(topics))
-    for i in range(0, number):
-        topic = topics[i]
-        t = {}
-        t['topicid'] = topic.id
-        t['from_user'] = topic.from_user.username
-        t['content'] = topic.content
-        t['create_time'] = topic.create_time.strftime('%Y-%m-%d %H:%M:%S' )
-        t['update_time'] = topic.update_time.strftime('%Y-%m-%d %H:%M:%S' )
-        t['JiaComments'] = comments_encode(JiaComment.objects.filter(topic = topic))
-        print(t)
-        rets.append(t)
-    return json.dumps(rets, ensure_ascii=False)
 
 
 @csrf_exempt       
@@ -264,7 +216,7 @@ def list_topic(request):
         return HttpResponse("EXCEPTION")
 
 
-##获取帖子列表
+##获取附近帖子列表
 def list_topic_nearby(request):
     try:
         if request.method != 'GET':
@@ -283,21 +235,526 @@ def list_topic_nearby(request):
         else:
             number = int(request.GET.get('number'))
         paginator = None
+        city = user.baby.city
+        if not city:
+            city = "北京"
         if not request.GET.get('longitude') or not request.GET.get('latitude'):
-            paginator = get_nearby_point_topic(user.baby.homepoint, page_size = number)
+            paginator = get_nearby_point_topic(user.baby.homepoint, page_size = number, city = city)
         else:
             longitude = request.GET.get('longitude')
             latitude = request.GET.get('latitude')
-            paginator = get_nearby_topic(longitude = longitude, latitude = latitude, page_size = number)
+            paginator = get_nearby_topic(longitude = longitude, latitude = latitude, page_size = number, city = city)
         try:
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(page))))
         except EmptyPage:
             # If page is out of range (e.g. 9999), deliver last page of results.
-            return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(paginator.num_pages))))
     except Exception as e:
-        print('Exception' + str(e))
+        print('Exception: ' + str(e))
+        traceback.print_exc()
+        return HttpResponse(json_serialize(status = 'EXCEPTION'))
+
+# #发表评论接口，app native
+# @csrf_exempt   ###保证对此接口的访问不需要csrf
+# def post_comment(request):
+#     try:
+#         if request.method != 'POST':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+#         content = request.POST.get('content')
+#         topicid = request.POST.get('topicid')
+#         if not content:
+#             return HttpResponse(json_serialize(status = 'EXCEPTION'))
+#         if not topicid:
+#             return HttpResponse(json_serialize(status = 'EXCEPTION'))
+#         timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+#         comment = JiaComment(from_user = user,
+#                              content =  content,
+#                              create_time = timenow,
+#                              topic = JiaTopic.objects.get(id = topicid)
+#                              )
+# 
+#         ret = comment.save()
+#         return HttpResponse(json_serialize(status = 'OK'))
+#     except Exception as e:
+#         print('Exception:' + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# #点赞接口，app native
+# @csrf_exempt   ###保证对此接口的访问不需要csrf
+# def post_praise(request):
+#     try:
+#         if request.method != 'POST':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+#         topicid = request.POST.get('id')
+#         if not topicid:
+#             return HttpResponse(json_serialize(status = 'EXCEPTION'))
+#         timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+#         comment = JiaPraise(from_user = user,
+#                              create_time = timenow,
+#                              topic = JiaTopic.objects.get(id = topicid)
+#                              )
+#         ret = comment.save()
+#         return HttpResponse(json_serialize(status = 'OK'))
+#     except Exception as e:
+#         print('Exception:' + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# #取消赞接口，app native
+# @csrf_exempt   ###保证对此接口的访问不需要csrf
+# def cancel_praise(request):
+#     try:
+#         if request.method != 'POST':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+#         topicid = request.POST.get('id')
+#         if not topicid:
+#             return HttpResponse(json_serialize(status = 'EXCEPTION'))
+#         praise = JiaPraise.objects.get(topic = JiaTopic.objects.get(id = topicid), from_user = user)
+#         ret = praise.delete()
+#         return HttpResponse(json_serialize(status = 'OK'))
+#     except Exception as e:
+#         print('Exception:' + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# 
+# #列出赞过的帖子
+# def list_praise_topic(request):
+#     try:
+#         if request.method != 'GET':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+#         if not request.GET.get('page'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         if not request.GET.get('number'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         page = int(request.GET.get('page'))
+#         number = int(request.GET.get('number'))
+#         topics = JiaTopic.objects.filter(JiaPraiseTopic__from_user = user)
+#         paginator = Paginator(topics, number)
+#         try:
+#             return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+#         except EmptyPage:
+#             # If page is out of range (e.g. 9999), deliver last page of results.
+#             return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+#     except Exception as e:
+#         print('Exception:' + str(type(e)) + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# 
+# #收藏帖子
+# @csrf_exempt
+# def collect_topic(request):
+#     try:
+#         if request.method != 'POST':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         if not request.POST.get('id'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         topicid = request.POST.get('id')
+#         topicid = int(topicid)
+#         try:
+#             collection_record = JiaTopicCollection.objects.get(user = user)
+#         except JiaTopicCollection.DoesNotExist:
+#             new_collection_record = JiaTopicCollection(user = user, collections = [])
+#             new_collection_record.collections.append(topicid)
+#             new_collection_record.save()
+#             return HttpResponse(json_serialize(status = 'OK'))
+#         else:
+#             if topicid not in collection_record.collections:
+#                 collection_record.collections.append(topicid)
+#                 collection_record.save()
+#             return HttpResponse(json_serialize(status = 'OK'))
+#     except Exception as e:
+#         print('Exception:' + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# #取消收藏
+# @csrf_exempt
+# def cancel_collection(request):
+#     try:
+#         if request.method != 'POST':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         if not request.POST.get('id'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         topicid = request.POST.get('id')
+#         topicid = int(topicid)
+#         try:
+#             collection_record = JiaTopicCollection.objects.get(user = user)
+#         except JiaTopicCollection.DoesNotExist:
+#             return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+#         else:
+#             if topicid not in collection_record.collections:
+#                 return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+#             collection_record.collections.remove(topicid)
+#             collection_record.save()
+#             return HttpResponse(json_serialize(status = 'OK'))
+#     except Exception as e:
+#         print('Exception:' + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+# 
+# #列出收藏
+# def list_collection(request):
+#     try:
+#         if request.method != 'GET':
+#             return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+#         (authed, username, password, user) = auth_user(request)
+#         if not authed or not user:
+#             return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+#         if not request.GET.get('page'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         if not request.GET.get('number'):
+#             return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+#         page = int(request.GET.get('page'))
+#         number = int(request.GET.get('number'))
+#         try:
+#             collection = user.jiatopiccollection
+#         except JiaTopicCollection.DoesNotExist:
+#             return HttpResponse(json_serialize(status = 'OK', result = {}))
+#         if not collection:
+#             return HttpResponse(json_serialize(status = 'OK', result = {}))
+#         topicids = collection.collections
+#         topics = get_topics_byids(topicids)
+#         paginator = Paginator(topics, number)
+#         try:
+#             return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(page))))
+#         except EmptyPage:
+#             # If page is out of range (e.g. 9999), deliver last page of results.
+#             return HttpResponse(json_serialize(status = 'OK', result = circletopiclist_encode(paginator.page(paginator.num_pages))))
+#     except Exception as e:
+#         print('Exception:' + str(type(e)) + str(e))
+#         return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+#发表评论接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def post_comment(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        content = request.POST.get('content')
+        topicid = request.POST.get('topicid')
+        if not content:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+        topicid = int(topicid)
+        if topicid > 0:
+            comment = JiaComment(from_user = user,
+                             content =  content,
+                             create_time = timenow,
+                             topic = JiaTopic.objects.get(id = topicid)
+                             )
+            ret = comment.save()
+        else:
+            comment = LocalNewsComment(from_user = user,
+                             content =  content,
+                             create_time = timenow,
+                             news = LocalNews.objects.get(id = 0 - topicid)
+                             )
+            ret = comment.save()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+##获取帖子的评论
+def list_comment(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        #获取topicid
+        topicid = None
+        if not request.GET.get('id') :
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'), result = {'description':'null id'})
+        else:
+            topicid = int(request.GET.get('id'))
+        #获取page参数
+        page = request.GET.get('page')
+        if not page:
+            page = 1
+        else:
+            page = int(page)
+        #获取number参数
+        number = request.GET.get('number')
+        if not number:
+            number = 5
+        else:
+            number = int(number)
+        if topicid > 0: #id为正说明是一个圈子帖子
+            topic = JiaTopic.objects.get(id = topicid)
+            comments = JiaComment.objects.filter(topic = topic)
+        else:#id为负说明是一个圈子新闻
+            newsid = 0 - topicid
+            news = LocalNews.objects.get(id = newsid)
+            comments = LocalNewsComment.objects.filter(news = news)
+        comments_list = list(comments)
+        comments_list.sort(key=lambda comment:comment.create_time, reverse=True)
+        paginator = Paginator(comments_list, number)
+        try:
+            ret = comments_encode(paginator.page(page))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            #return HttpResponse(json_serialize(status = 'OK', result = {'userid':user.id, 'topics':circletopiclist_encode(paginator.page(paginator.num_pages))}))
+            ret = comments_encode(paginator.page(paginator.num_pages))
+        finally:
+            print(ret)
+            return HttpResponse(json_serialize(status = 'OK', result = {'comments':ret}))
+    except Exception as e:
+        print(str(e))
+        traceback.print_exc()
         return HttpResponse(json_serialize(status = 'EXCEPTION'))
 
 
+#点赞接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def post_praise(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        topicid = request.POST.get('id')
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        timenow = datetime.datetime.utcnow().replace(tzinfo=utc)
+        topicid = int(topicid)
+        if topicid > 0:
+            if not JiaPraise.objects.filter(from_user = user, topic = JiaTopic.objects.get(id = topicid)):
+                praise = JiaPraise(from_user = user,
+                             create_time = timenow,
+                             topic = JiaTopic.objects.get(id = topicid)
+                             )
+                ret = praise.save()
+            else:
+                return HttpResponse(json_serialize(status = 'OK', result = 'DUP_PRAISE'))
+        else:
+            newsid = 0 - topicid
+            if not LocalNewsPraise.objects.filter(from_user = user, news = LocalNews.objects.get(id = newsid)):
+                praise = LocalNewsPraise(from_user = user,
+                             create_time = timenow,
+                             news = LocalNews.objects.get(id = newsid)
+                             )
+                ret = praise.save()
+            else:
+                return HttpResponse(json_serialize(status = 'OK', result = 'DUP_PRAISE'))
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
 
+#取消赞接口，app native
+@csrf_exempt   ###保证对此接口的访问不需要csrf
+def cancel_praise(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        topicid = request.POST.get('id')
+        if not topicid:
+            return HttpResponse(json_serialize(status = 'EXCEPTION'))
+        topicid = int(topicid)
+        if topicid > 0:
+            praise = JiaPraise.objects.get(topic = JiaTopic.objects.get(id = topicid), from_user = user)
+            ret = praise.delete()
+        else:
+            praise = LocalNewsPraise.objects.get(news = LocalNews.objects.get(id = 0 - topicid), from_user = user)
+            ret = praise.delete()
+        return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+#列出赞过的帖子
+def list_praise_topic(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        if not request.GET.get('page'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.GET.get('number'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        page = int(request.GET.get('page'))
+        number = int(request.GET.get('number'))
+        topics = JiaTopic.objects.filter(JiaPraiseTopic__from_user = user)
+        news = LocalNews.objects.filter(LocalNewsPraiseNews__from_user = user)
+        rets = []
+        if topics:
+            rets.extend(circletopiclist_encode(topics))
+        if news:
+            rets.extend(circlenewslist_encode(news))
+        if len(rets) > 1:
+            rets.sort(key=(lambda x:x['create_time']))
+        paginator = Paginator(rets, number)
+        try:
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(page))))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(paginator.num_pages))))
+    except Exception as e:
+        print('Exception:' + str(type(e)) + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+
+#收藏帖子
+@csrf_exempt
+def collect_topic(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.POST.get('id'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        topicid = request.POST.get('id')
+        topicid = int(topicid)
+        if topicid > 0:
+            try:
+                collection_record = JiaTopicCollection.objects.get(user = user)
+            except JiaTopicCollection.DoesNotExist:
+                new_collection_record = JiaTopicCollection(user = user, collections = [])
+                new_collection_record.collections.append(topicid)
+                new_collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+            else:
+                if topicid not in collection_record.collections:
+                    collection_record.collections.append(topicid)
+                    collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        else:   #topicid小于0说明是圈子新闻
+            newsid = 0 - topicid
+            try:
+                collection_record = LocalNewsCollection.objects.get(user = user)
+            except LocalNewsCollection.DoesNotExist:
+                new_collection_record = LocalNewsCollection(user = user, collections = [])
+                new_collection_record.collections.append(newsid)
+                new_collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+            else:
+                if newsid not in collection_record.collections:
+                    collection_record.collections.append(newsid)
+                    collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#取消收藏
+@csrf_exempt
+def cancel_collection(request):
+    try:
+        if request.method != 'POST':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.POST.get('id'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        topicid = request.POST.get('id')
+        topicid = int(topicid)
+        if topicid > 0: #大于0代表是圈子帖子
+            try:
+                collection_record = JiaTopicCollection.objects.get(user = user)
+            except JiaTopicCollection.DoesNotExist:
+                return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+            else:
+                if topicid not in collection_record.collections:
+                    return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+                collection_record.collections.remove(topicid)
+                collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        else: #小于零代表是圈子新闻
+            newsid = 0 - topicid
+            try:
+                collection_record = LocalNewsCollection.objects.get(user = user)
+            except LocalNewsCollection.DoesNotExist:
+                return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+            else:
+                if newsid not in collection_record.collections:
+                    return HttpResponse(json_serialize(status='NOT_COLLECTED'))
+                collection_record.collections.remove(newsid)
+                collection_record.save()
+                return HttpResponse(json_serialize(status = 'OK'))
+        
+    except Exception as e:
+        print('Exception:' + str(e))
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
+
+#列出收藏
+def list_collection(request):
+    try:
+        if request.method != 'GET':
+            return HttpResponse(json_serialize(status = 'HTTP_METHOD_ERR'))
+        (authed, username, password, user) = auth_user(request)
+        if not authed or not user:
+            return HttpResponse(json_serialize(status = 'AUTH_FAILED'))
+        if not request.GET.get('page'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        if not request.GET.get('number'):
+            return HttpResponse(json_serialize(status = 'PARAM_NULL'))
+        page = int(request.GET.get('page'))
+        number = int(request.GET.get('number'))
+        topicids = []
+        newsids = []
+        try:
+            topiccollection = user.jiatopiccollection
+        except JiaTopicCollection.DoesNotExist:
+            topicids = []
+        try:
+            newscollection = user.localnewscollection
+        except LocalNewsCollection.DoesNotExist:
+            newsids = []
+        if not topiccollection and not newscollection:
+            return HttpResponse(json_serialize(status = 'OK', result = {}))
+        rets = []
+        topicids = topiccollection.collections
+        newsids = newscollection.collections
+        topics = get_topics_byids(topicids)
+        news = get_localnews_byids(newsids)
+        if topics:
+            rets.extend(circletopiclist_encode(topics))
+        if news:
+            rets.extend(circlenewslist_encode(news))
+        if len(rets) > 1:
+            rets.sort(key=(lambda x:x['create_time']) )
+        paginator = Paginator(rets, number)
+        try:
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(page))))
+        except EmptyPage:
+            # If page is out of range (e.g. 9999), deliver last page of results.
+            return HttpResponse(json_serialize(status = 'OK', result = list(paginator.page(paginator.num_pages))))
+    except Exception as e:
+        print('Exception:' + str(type(e)) + str(e))
+        traceback.print_exc()
+        return HttpResponse(json_serialize(status = 'EXCEPTION', result = str(e)))
 

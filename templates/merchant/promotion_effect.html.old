@@ -1,0 +1,19 @@
+{% extends "merchant/merchant_home.html" %}
+
+{% load user_headurl %}
+
+{%block home_content%}
+<div class="list-group">
+<p class="text-info list-group-item-heading" style="font-size:30px; font-weight:bold">您周围有{{userpoints | length}}位个人用户</p>
+
+{% for baby in userpoints %}
+{% if baby.haveseen %}
+<p style="font-size:16px; font-weight:bold" class="list-group-item list-group-item-success col-sm-6">距离您大约{{baby.distance}}m有用户{{baby.username}}， 已经浏览该条信息，您们尚未联系 </p>
+{% else %}
+<p style="font-size:16px; font-weight:bold" class="list-group-item list-group-item-warning col-sm-6">距离您大约{{baby.distance}}m有用户{{baby.username}}， 尚未浏览该条信息，您们尚未联系 </p>
+{% endif %}
+{% endfor %}
+</div>
+{%endblock%}
+
+

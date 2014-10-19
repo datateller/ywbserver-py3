@@ -1,0 +1,46 @@
+{%extends "merchant/merchant_home.html"%}
+
+{%block home_content%}
+<div class="container">
+  <div class="row row-offcanvas-right">
+    <div class="col-md-8">
+      <div class="list-group">
+        {%for commercial in commercial_list%}
+           <div class="row" style="border-bottom:1px solid #f5f5f5; padding-top:10px">
+             <div class="col-md-2" style="margin-top:10px">
+               {% if commercial.photo %}
+  		  <img src="/media/{{commercial.photo}}" class="img-responsive" style="max-width:100px; max-height:100px" alt="Responsive image">
+               {% endif %}
+             </div>
+	     <div class="col-md-4" style="margin-top:10px">          
+             <p style="font-weight:bold">{{commercial.title}}</h4>
+             <p style="font-size:12px; font-style:italic">起始时间 {{commercial.valid_date_from}}</p>
+             {% if commercial.valid_date_end %}
+             <p style="font-size:12px; font-style:italic">截止时间 {{commercial.valid_date_end}}</p>
+             {% endif %}
+             </div>
+             <div class="col-md-1" style="padding-right:75px">
+               <a class="btn btn-success btn-large" style="margin-top:10px" href="/merchant/commercials/promotioneffect/{{commercial.id}}/">已推送</a>
+             </div>
+             <!--
+             <div class="col-md-1" style="padding-right:75px">
+               <a class="btn btn-success btn-large" style="margin-top:10px" href="/merchant/commercials/userresponses/{{commercial.id}}/">已接单</a>
+             <a>
+             -->
+             <div class="col-md-1" style="padding-right:65px">
+               <a class="btn btn-success btn-large" style="margin-top:10px" href="/merchant/commercials/comments/{{commercial.id}}/">评论</a>
+             </div>
+             <!--
+             <div class="col-md-1">
+               <a class="btn btn-success btn-large" style="margin-top:10px" href="#">周边用户</a> 
+             </div>
+             -->
+           </div>
+        {%endfor%}
+      </div>
+    </div>
+  </div>
+</div>
+{%endblock%}
+
+

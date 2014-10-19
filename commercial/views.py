@@ -4,6 +4,7 @@ from django.utils import http
 from django.contrib import auth
 from django.contrib.auth.models import User
 from datetime import *
+import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import get_template
 from django.template import Context

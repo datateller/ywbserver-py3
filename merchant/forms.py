@@ -77,4 +77,13 @@ class UserDemandRespForm(forms.ModelForm):
             'respcontent':forms.Textarea(attrs={'placeholder':'请输入您的接单信息', 'class':'form-control', 'rows':1, 'required':'required'})
         }
 
-    
+ 
+class CommercialCommentRespForm(forms.ModelForm):
+    class Meta:
+        model = CommercialCommentResp
+        #fields = ('userdemand', 'respcontent', 'resp_time', 'resp_merchantuser_id')
+        fields = ('respcontent',)
+        widgets = {
+            'respcontent':forms.Textarea(attrs={'placeholder':'请输入您的回复信息', 'class':'form-control', 'rows':1, 'required':'required'})
+        }
+

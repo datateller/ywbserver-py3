@@ -133,7 +133,9 @@ class MerchantHomeView(TemplateView):
             userpoints.append({'x':baby.homepoint.x, 'y':baby.homepoint.y})
 
         context['userpoints'] = userpoints
-        context['pushcount']=CommercialHistory.objects.filter(merchant_id=merchant.id).count()
+        #context['pushcount']=CommercialHistory.objects.filter(merchant_id=merchant.id).count()
+        context['danzicount']=UserDemand.objects.count()
+        context['promotioncount']=Commercial.objects.filter(merchant = merchant).count()
         
         return context
 
@@ -159,6 +161,24 @@ class CommercialListView(TemplateView):
     @method_decorator(login_required)
     def dispatch(self, *args, **kwargs):
         return super(CommercialListView, self).dispatch(*args, **kwargs)
+
+class CommercialPromotionView(TemplateView):
+    template_name = 'merchant/commercial_promotion.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CommercialPromotionView, self).get_context_data(**kwargs)
+        context['login_form'] = LoginForm()
+        user = self.request.user
+        merchant = user.merchant
+        clist = []
+        clist = Commercial.objects.filter(merchant = merchant)
+        context['commercial_list'] = clist
+        context['merchant'] = Merchant.objects.filter(user__username = self.request.user.username)[0]
+        return context
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super(CommercialPromotionView, self).dispatch(*args, **kwargs)
     
     
 class CommercialPostView(FormView):
@@ -239,11 +259,60 @@ class PromotionView(TemplateView):
             print("###baby x:",baby.homepoint.x,"###baby y:",baby.homepoint.y)
             babydistance = min(int(haversine(merchant.longitude, merchant.latitude, baby.homepoint.x, baby.homepoint.y)*1000), 5000)
             haveseen = False
+            seentime = ""
             if baby in seenbabys:
                 haveseen = True
-            userpoints.append({'x':baby.homepoint.x, 'y':baby.homepoint.y, 'distance':babydistance, 'username':baby.user.username, 'haveseen':haveseen})
+                seentime = seenhistory[seenbabys.index(baby)]
+            userpoints.append({'x':baby.homepoint.x, 'y':baby.homepoint.y, 'distance':babydistance, 'username':baby.user.username, 'haveseen':haveseen, 'seentime':seentime})
         context['userpoints'] = userpoints
         return context
+
+class CommercialReceiptView(TemplateView):
+    template_name = 'merchant/commercial_receipt.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CommercialReceiptView, self).get_context_data(**kwargs)
+        commercialid = kwargs["commercial_id"]
+        commercial = Commercial.objects.get(id=commercialid)
+        receipts = CommercialReceipt.objects.filter(commercial=commercial)
+
+        context['merchant'] = merchant = Merchant.objects.filter(user__username = self.request.user.username)[0]
+        userpoints = []
+        merp = fromstr("POINT(%s %s)" % (merchant.longitude, merchant.latitude))
+
+        for receipt in receipts:
+            baby = receipt.from_user.baby
+            babydistance = min(int(haversine(merchant.longitude, merchant.latitude, baby.homepoint.x, baby.homepoint.y)*1000), 5000)
+            userpoints.append({'x':baby.homepoint.x, 'y':baby.homepoint.y, 'distance':babydistance, 'username':baby.user.username, 'receive_time':receipt.receive_time})
+        context['userpoints'] = userpoints
+        return context
+
+class CommercialCommentView(TemplateView):
+    template_name = 'merchant/commercial_comment.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(CommercialCommentView, self).get_context_data(**kwargs)
+        print("#####i am here")
+        commercialid = kwargs['commercial_id']
+        commercial = Commercial.objects.get(id=commercialid)
+        comments = CommercialComment.objects.filter(commercialid = commercial)
+    
+        context['merchant'] = merchant = Merchant.objects.filter(user__username = self.request.user.username)[0]
+        commercialcomments = []
+        
+        for comment in comments:
+            baby = comment.from_user.baby
+            xdist = baby.homepoint.x if baby.homepoint else  0
+            ydist = baby.homepoint.y if baby.homepoint else  0
+            babydistance = min(int(haversine(merchant.longitude, merchant.latitude, xdist, ydist)*1000), 5000)
+            commercialcomments.append({'distance':babydistance, 'username':comment.from_user.username, 'create_time':comment.create_time, 'content':comment.comment, 'id':comment.id, 'commentobj':comment})
+
+        context['commercialcomments'] = commercialcomments
+        context['respform']=CommercialCommentRespForm()
+        print("##commercial id:",commercialid)
+        context['commercial_id']=commercialid
+        return context
+
 
 class FindHelpView(TemplateView):
     template_name = 'merchant/findhelp.html'
@@ -276,6 +345,18 @@ def resp_user_demand_view(request):
             resp.save()
             return HttpResponseRedirect('/merchant/findhelp/') 
         return HttpResponseRedirect('/merchant/findhelp/')
+
+def commercial_comment_response_view(request, commercial_id, comment_id):
+    if request.method == "POST":
+        respform = CommercialCommentRespForm(request.POST)
+        resp = respform.save(commit=False)
+        print("##commecial comment resp:", resp.respcontent)
+        resp.resp_time = datetime.datetime.utcnow().replace(tzinfo=utc)
+        resp.resp_merchantuser_id = request.user.id
+        resp.commercial_comment = CommercialComment.objects.get(id=comment_id)
+        resp.save()
+        return HttpResponseRedirect('/merchant/commercials/comments/'+str(commercial_id)+'/')
+    return HttpResponseRedirect('/merchant/commercials/comments/'+str(commercial_id)+'/')
 
 from django.views.decorators.http import require_POST, require_GET
 
@@ -386,6 +467,32 @@ class MerchantDetailView(TemplateView):
         context["merchant"] = merchant = Merchant.objects.get(id=merchantid)
         #context["pic"] = Commercial.objects.get(id=commercialid).photo.url
         #print("##merchant:",merchant)
+        return context
+
+class MerchantCommentsView(TemplateView):
+    template_name = "merchant/merchant_comment.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(MerchantCommentsView, self).get_context_data(**kwargs)
+        haopinguser = {"username": "sg", "comment":"这个商家信誉不错", "pub_time":"2014-09-21 10:21:21"}
+        medianuser = {"username":"xzh", "comment":"这个商家很一般啊", "pub_time":"2014-09-22 12:22:23"}
+        baduser = {"username":"we", "comment":"这个商家发货很慢啊", "pub_time": "2014-09-23 20:20:20"}
+        
+        userpoints = []
+        haopinguserpoints = []
+        medianuserpoints = []
+        baduserpoints = []
+        haopinguserpoints.append(haopinguser)
+        medianuserpoints.append(medianuser)
+        baduserpoints.append(baduser)
+
+        userpoints.extend(haopinguserpoints)
+        userpoints.extend(medianuserpoints)
+        userpoints.extend(baduserpoints) 
+        context["userpoints"] = userpoints
+        context["haopinguserpoints"] = haopinguserpoints
+        context["medianuserpoints"] = medianuserpoints
+        context["baduserpoints"] = baduserpoints
         return context
 
 @require_GET

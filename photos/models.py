@@ -28,16 +28,22 @@ class Head(models.Model):
 
 def getheadurl(user, type):
     if not user:
-        full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
+#         full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
+#         return full_url
+        url = "/media/head/default.jpg"
+        return url
     heads = Head.objects.filter(username = user.username)
     if len(heads) == 0:
-        full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
+#         full_url = ''.join([settings.DOMAIN, '/media/head/default.jpg'])
+        url = "/media/head/default.jpg"
     else:
         head = list(heads)[-1]
         if type == 'orig':
-            full_url = ''.join([settings.DOMAIN, head.head_orig.url])
+#             full_url = ''.join([settings.DOMAIN, head.head_orig.url])
+            url = head.head_orig.url
         if type == 'thumbnail':
-            full_url = ''.join([settings.DOMAIN, head.head_thumbnail.url])
-    return full_url
+#             full_url = ''.join([settings.DOMAIN, head.head_thumbnail.url])
+            url = head.head_thumbnail.url
+    return url
 
 

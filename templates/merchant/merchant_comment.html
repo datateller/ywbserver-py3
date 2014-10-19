@@ -1,0 +1,138 @@
+{% extends "merchant/merchant_home.html" %}
+
+{% load user_headurl %}
+
+{%block home_content%}
+<div class="container">
+<div class="row row-offcanvas-right">
+  <div class="col-md-8">
+    <div style="border:2px solid #c0c0c0" class="col-md-8">
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="commentstype" id="allcomments" value="optionalall" checked>
+          全部
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="commentstype" id="goodcomments" value="optionalgood">
+          好评
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="commentstype" id="mediancomments" value="optionalmedian">
+          中评
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="commentstype" id="badcomments" value="optionalbad">
+          差评
+        </label>
+      </div>
+      <div class="radio-inline">
+        <label>
+          <input type="radio" name="commentstype" id="appendcomments" value="optionalappend">
+          追评
+        </label>
+      </div>
+    </div>
+    <br/>
+    <div class="list-group commentcontent" id="allcontent" style="padding-top:20px">
+      <div>
+        {% for user in userpoints %}
+        <div class="row col-md-12">
+        <div class="col-md-2">
+          <img src={{user.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{user.username}}</p>
+        </div>
+        <div class="col-md-10" style="border-bottom:1px solid #f5f5f5; margin-bottom:40px">
+          <div class="list-group-item list-group-item-success">
+            <p style="font-size:18px; font-weight:bold">{{user.comment}}</p>
+            <p style="font-size:12px; font-style:italic">{{user.pub_time}}</p>
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="list-group commentcontent" id="haopingcontent" style="padding-top:14px; display:none" >
+      <div>
+        {% for user in haopinguserpoints %}
+        <div class="row col-md-12">
+        <div class="col-md-2">
+          <img src={{user.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{user.username}}</p>
+        </div>
+        <div class="col-md-10" style="border-bottom:1px solid #f5f5f5; margin-bottom:40px">
+          <div class="list-group-item list-group-item-success">
+            <p style="font-size:18px; font-weight:bold">{{user.comment}}</p>
+            <p style="font-size:12px; font-style:italic">{{user.pub_time}}</p>
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="list-group commentcontent" id="mediancontent" style="padding-top:14px; display:none" >
+      <div>
+        {% for user in medianuserpoints %}
+        <div class="row col-md-12">
+        <div class="col-md-2">
+          <img src={{user.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{user.username}}</p>
+        </div>
+        <div class="col-md-10" style="border-bottom:1px solid #f5f5f5; margin-bottom:40px">
+          <div class="list-group-item list-group-item-success">
+            <p style="font-size:18px; font-weight:bold">{{user.comment}}</p>
+            <p style="font-size:12px; font-style:italic">{{user.pub_time}}</p>
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="list-group commentcontent" id="badcontent" style="padding-top:14px; display:none" >
+      <div>
+        {% for user in baduserpoints %}
+        <div class="row col-md-12">
+        <div class="col-md-2">
+          <img src={{user.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{user.username}}</p>
+        </div>
+        <div class="col-md-10" style="border-bottom:1px solid #f5f5f5; margin-bottom:40px">
+          <div class="list-group-item list-group-item-success">
+            <p style="font-size:18px; font-weight:bold">{{user.comment}}</p>
+            <p style="font-size:12px; font-style:italic">{{user.pub_time}}</p>
+          </div>
+        </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+{%endblock%}
+
+
+{%block innerjs %}
+<script>
+//$("#haopingcontent").css({"display":"block"})
+$(function(){
+ var amap={"allcomments":"allcontent", "goodcomments":"haopingcontent", "mediancomments":"mediancontent", "badcomments":"badcontent"};
+ $('input:radio').change(
+   function() {
+     $('.commentcontent').css({"display":"none"});
+     $("#" + amap[$(this).attr("id")]).css({"display":"block"});
+     //alert($(this).attr("id"));
+   }
+  );
+});
+</script>
+{%endblock %}

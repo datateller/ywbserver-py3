@@ -8,6 +8,7 @@ class Knowledge(models.Model):
     title = models.CharField(max_length=1000)
     keyword = models.CharField(max_length=1000)
     abstract = models.TextField(max_length=1000)
+    images = models.TextField(max_length=1000)
     content = models.TextField(max_length=50000)
     min = models.IntegerField()
     max = models.IntegerField()

@@ -1,22 +1,45 @@
 {% extends "merchant/merchant_home.html" %}
 
+{% load user_headurl %}
+
 {% block home_content %}
 <div class="container">
   <div class="row row-offcanvas-right">
     <div class="col-md-8">
     <div class="list-group">
-      <p class="text-info list-group-item-heading" style="font-size:30px; font-weight:bold">已发布需求</p>
+      <div style="padding-bottom:15px">
+      <p class="text-info list-group-item-heading" style="font-size:30px; font-weight:bold; text-align:center">已发布需求</p>
+      </div>
 
       {% for help in findhelpers %}
-        <div class="list-group-item">
+        <!-- <div class="list-group-item"> -->
+        <div>
           <form class="form-horizontal" role="form" action="/merchant/resp_user_demand/" method="post" enctype="multipart/form-data">{%csrf_token%}
-          <input type="hidden" name="userdemandid" value="{{help.id}}"></input>
-          <p style="font-size:14px; font-style:italic" class="text-info">用户 {{help.user.username}} 发布需求 &#160; &#160; &#160; 发布时间: {{help.pub_time}}</p>
-          <p style="font-size:18px; font-weight:bold" class="list-group-item list-group-item-success">{{help.content}}</p>
-          <div class="textarea">{{respform.respcontent}}</div>
-          <button class="btn btn-success" type="submit" name="respuserdemand">接单</button>              </form> 
+            <input type="hidden" name="userdemandid" value="{{help.id}}"></input>
+            <div class="col-md-2"> 
+              <img src={{help.user.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+              <p style="font-size:14px; text-align:center" class="text-info">{{help.user.username}}</p>
+            </div>
+            <div class="col-md-10 " style="border-bottom:1px solid #f5f5f5; margin-bottom:40px">
+              <div class="list-group-item list-group-item-success">
+              <p style="font-size:18px; font-weight:bold" >{{help.content}}</p>
+              <p style="font-size:12px; font-style:italic">{{help.pub_time}}</p>
+              </div>
+              {{respform.respcontent}}
+              <div style="padding-top:10px">
+              <button class="btn btn-success" type="submit" name="respuserdemand" style="float:right">接单</button>
+              </div>
+              <div style="padding-top:30px">
+                {% for resp  in help.getresp %}
+                  {% if resp.resp_merchantuser_id == merchant.user.id %}
+                <p style="font-size:16px; font-style:italic" class="text-info">{{resp.respcontent}}</p>
+                  {% endif %}
+                {% endfor %} 
+              </div>
+            </div>
+            
+          </form> 
         </div>
-        <br/>
       {% endfor %}
     </div>
     </div>

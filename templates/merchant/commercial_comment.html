@@ -1,0 +1,44 @@
+{% extends "merchant/merchant_home.html" %}
+
+{% load user_headurl %}
+
+{%block home_content%}
+<div class="row row-offcanvas-right">
+  <div class="col-md-8">
+    <div class="list-group">
+  {% for comment in commercialcomments %}
+      <div class="row" style="padding-top:20px">
+        <div class="col-md-2" style="margin-top:10px">
+          <img src={{comment.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{comment.username}}</p>
+        </div>
+        <div class="col-md-5" style="margin-top:30px">
+          <p style="font-size:16px">{{comment.content}}</p>
+          <p style="font-size:12px;" class="text-info">推送时间：{{comment.create_time}}</p>
+        </div>
+        <div class="col-md-4" style="margin-top:30px">
+          <p style="font-size:16px;" class="text-success">距离：{{comment.distance}}m</p>
+        </div>
+      </div>
+      <div class="row">
+        <form class="form-horizontal" rol="form" action="/merchant/commercials/commentresponse/{{commercial_id}}/{{comment.id}}/" method="post" enctype="multipart/form-data">{%csrf_token%}
+        <div class="col-md-offset-2 col-md-8">
+           {{respform.respcontent}}
+           <button class="btn btn-success" type="submit" style="float:right">回复</button>
+        </div>
+        </form>
+      </div>
+      <div class="col-md-offset-2" style="padding-top:20px; border-bottom:1px solid #f5f5f5">
+          {% for resp in comment.commentobj.getresp %}
+            {% if resp.resp_merchantuser_id == merchant.user.id %}
+          <p style="font-size:14px" class="text-success">{{resp.respcontent}}</p>
+            {% endif %}
+          {% endfor %}
+      </div>
+  {% endfor %}
+    </div>
+  </div>
+</div>
+{%endblock%}
+
+

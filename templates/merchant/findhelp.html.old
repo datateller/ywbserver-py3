@@ -1,0 +1,25 @@
+{% extends "merchant/merchant_home.html" %}
+
+{% block home_content %}
+<div class="container">
+  <div class="row row-offcanvas-right">
+    <div class="col-md-8">
+    <div class="list-group">
+      <p class="text-info list-group-item-heading" style="font-size:30px; font-weight:bold">已发布需求</p>
+
+      {% for help in findhelpers %}
+        <div class="list-group-item">
+          <form class="form-horizontal" role="form" action="/merchant/resp_user_demand/" method="post" enctype="multipart/form-data">{%csrf_token%}
+          <input type="hidden" name="userdemandid" value="{{help.id}}"></input>
+          <p style="font-size:14px; font-style:italic" class="text-info">用户 {{help.user.username}} 发布需求 &#160; &#160; &#160; 发布时间: {{help.pub_time}}</p>
+          <p style="font-size:18px; font-weight:bold" class="list-group-item list-group-item-success">{{help.content}}</p>
+          <div class="textarea">{{respform.respcontent}}</div>
+          <button class="btn btn-success" type="submit" name="respuserdemand">接单</button>              </form> 
+        </div>
+        <br/>
+      {% endfor %}
+    </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

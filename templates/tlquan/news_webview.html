@@ -25,28 +25,29 @@
       	<div class="col-sm-9 col-xs-9">
       		<div class="row">
       			<a href="#" >
-      				<h4>{{topic.from_user.username}}</h4>
+      				<h4>{{username}}</h4>
       			</a>
       		</div>
       		<div class="row">
-      			<small class="text-muted">{{topic.create_time}}</small>
+      			<small class="text-muted">{{news.published_time}}</small>
       		</div>
       	</div>
     </div>
     
     <div class="row">
       	<div class="col-sm-12 col-xs-12">
-      	<h4>{{topic.content}}</h4>
+      		<h4>{{news.text}}</h4>
+      		<a href="{{news.link}}" > <h4>原文 </h4></a>
       	</div>
 	</div>
     
     <div class="row">
       	<div class="col-sm-12 col-xs-12 	text-center">
-			{% for photo in topic.photo_set.all %}
-				<a href="{{photo.photo_orig.url}}" >
-                	<img src="{{photo.photo_orig.url}}" class="img-thumbnail" >
+      		{%if news.piclink%}
+				<a href="{{news.piclink}}" >
+                	<img src="{{news.piclink}}" class="img-thumbnail" >
                 </a>
-            {% endfor %}
+             {%endif%}
       	</div>
 	</div>
     

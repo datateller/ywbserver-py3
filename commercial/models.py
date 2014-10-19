@@ -76,6 +76,16 @@ class CommercialComment(models.Model):
     commercialid = models.ForeignKey(Commercial)
     comment = models.CharField(max_length=5000)
     create_time = models.DateTimeField(default=datetime.datetime.utcnow().replace(tzinfo=utc))
+    
+    def getresp(self):
+        print("###in commercial comment getresp")
+        return self.commercialcommentresp_set.all()
+
+
+class CommercialReceipt(models.Model):
+    from_user = models.ForeignKey(User)
+    commercial = models.ForeignKey(Commercial)
+    receive_time = models.DateTimeField(default=datetime.datetime.utcnow().replace(tzinfo=utc))
 
 
 def get_commercial_nearby(homepoint, number=1, distance = 50000):
@@ -125,6 +135,8 @@ def commercial_list_encode(commercials):
         t['icon'] = 'http://www.yangwabao.com:8001/icon/'+str(picindexes[i])+'.png'
         t['address'] = commercial.merchant.address
         t['link'] = DOMAIN + ("/appcommercial/webview/%d/" % commercial.id)
+        comentset = CommercialComment.objects.filter(commercialid=commercial.id)
+        t['commentnum'] = str(len(comentset))
         rets.append(t)
     return rets
 
@@ -143,6 +155,7 @@ def getcommerciallist(baby, number):
         response = commercial_list_encode(commercial_nearby)
     for commercial in commercial_nearby:
         print("##commercialid:", commercial.id, "##merchantid:", commercial.merchant.id, "##babyid:", baby.id)
-        store_commercial_history(commercial.id, commercial.merchant.id, baby.id)
+	#commen due to errors
+        #store_commercial_history(commercial.id, commercial.merchant.id, baby.id)
     return response
     

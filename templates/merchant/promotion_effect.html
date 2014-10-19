@@ -1,16 +1,31 @@
 {% extends "merchant/merchant_home.html" %}
 
-{%block home_content%}
-<div class="list-group">
-<p class="text-info list-group-item-heading" style="font-size:30px; font-weight:bold">您周围有{{userpoints | length}}位个人用户</p>
+{% load user_headurl %}
 
-{% for baby in userpoints %}
-{% if baby.haveseen %}
-<p style="font-size:16px; font-weight:bold" class="list-group-item list-group-item-success col-sm-6">距离您大约{{baby.distance}}m有用户{{baby.username}}， 已经浏览该条信息，您们尚未联系 </p>
-{% else %}
-<p style="font-size:16px; font-weight:bold" class="list-group-item list-group-item-warning col-sm-6">距离您大约{{baby.distance}}m有用户{{baby.username}}， 尚未浏览该条信息，您们尚未联系 </p>
-{% endif %}
-{% endfor %}
+{%block home_content%}
+<div class="row row-offcanvas-right">
+  <div class="col-md-8">
+    <div class="list-group">
+  {% for baby in userpoints %}
+      <div class="row" style="border-bottom:1px solid #f5f5f5; padding-top:10px">
+        <div class="col-md-2" style="margin-top:10px">
+          <img src={{baby.username | getuserheadurl:"thumbnail"}} style="max-width:80px; max-height:80px"></img>
+          <p style="font-size:14px; text-align:center" class="text-info">{{baby.username}}</p>
+        </div>
+        <div class="col-md-5" style="margin-top:35px">
+          {% if baby.haveseen %}
+          <p style="font-size:16px;" class="text-info">推送时间：{{baby.seentime}}</p>
+          {% else %}
+          <p style="font-size:16px;" class="text-info">推送时间：等待推送中 </p>
+          {% endif %}
+        </div>
+        <div class="col-md-4" style="margin-top:35px">
+          <p style="font-size:16px;" class="text-success">距离：{{baby.distance}}m</p>
+        </div>
+      </div>
+  {% endfor %}
+    </div>
+  </div>
 </div>
 {%endblock%}
 

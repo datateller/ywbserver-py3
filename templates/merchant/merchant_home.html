@@ -5,6 +5,56 @@
     <!-- Custom styles for this template -->
     <link href="/static/css/offcanvas.css?v=1" rel="stylesheet">
     {%block innercustomcss %}
+    <style>
+#home_danzi {
+    /* Firefox 3.6+ */
+background: -moz-linear-gradient(top, #c1ffc1, #98fb98);
+/* Safari 4-5, Chrome 1-9 */
+/* -webkit-gradient(,  [, ]?,  [, ]? [, ]*) */
+background: -webkit-gradient(linear,top,from(#c1ffc1),to(#98fb98));
+/* Safari 5.1+, Chrome 10+ */
+background: -webkit-linear-gradient(top, i#c1ffc1, #98fb98);
+/* Opera 11.10+ */
+background: -o-linear-gradient(top, #c1ffc1, #98fb98);
+}
+
+#home_tuiguang {
+    /* Firefox 3.6+ */
+background: -moz-linear-gradient(top, #ffc1c1, #ff6eb4);
+/* Safari 4-5, Chrome 1-9 */
+/* -webkit-gradient(,  [, ]?,  [, ]? [, ]*) */
+background: -webkit-gradient(linear,top,from(#ffc1c1),to(#ff6eb4));
+/* Safari 5.1+, Chrome 10+ */
+background: -webkit-linear-gradient(top, #ffc1c1, #ff6eb4);
+/* Opera 11.10+ */
+background: -o-linear-gradient(top, #ffc1c1, #ff6eb4);
+}
+
+#home_pinglun {
+    /* Firefox 3.6+ */
+background: -moz-linear-gradient(top, #cd96cd, #ba55d3);
+/* Safari 4-5, Chrome 1-9 */
+/* -webkit-gradient(,  [, ]?,  [, ]? [, ]*) */
+background: -webkit-gradient(linear,top,from(#cd96cd),to(#ba55d3));
+/* Safari 5.1+, Chrome 10+ */
+background: -webkit-linear-gradient(top, #cd96cd, #ba55d3);
+/* Opera 11.10+ */
+background: -o-linear-gradient(top, #cd96cd, #ba55d3);
+}
+
+#home_zijin {
+    /* Firefox 3.6+ */
+background: -moz-linear-gradient(top, #8deeee, #66cdaa);
+/* Safari 4-5, Chrome 1-9 */
+/* -webkit-gradient(,  [, ]?,  [, ]? [, ]*) */
+background: -webkit-gradient(linear,top,from(#8deeee),to(#66cdaa));
+/* Safari 5.1+, Chrome 10+ */
+background: -webkit-linear-gradient(top, #8deeee, #66cdaa);
+/* Opera 11.10+ */
+background: -o-linear-gradient(top, #8deeee, #66cdaa);
+}
+
+    </style>
     {%endblock %}
 {% endblock %}
 
@@ -52,29 +102,29 @@
             </div> --><!--/span-->
 	    <div class="col-3 col-sm-3 col-lg-3 col-xs-3 col-md-3">
 		<a href="/merchant/findhelp/">
-    		  <div class="jumbotron" style="display:block; text-align:center; background-color:#43CD80; padding:10px">
+    		  <div id="home_danzi" class="jumbotron" style="display:block; text-align:center; padding:10px">
 		    <span>
-  		      <p style="color:white; font-size:25px; padding-top:5px">单子 </h2>
-                      <!-- <h2 style="color:white">{{ pushcount }}</h2> -->
+  		      <p style="color:#454545; font-size:25px; font-weight:bold; padding-top:5px">单子{{danzicount}} </h2>
+	        <!-- <h2 style="color:white">{{ pushcount }}</h2> -->
 		    </span>
 		  </div>
                 </a>
             </div><!--/span-->
 	    <div class="col-3 col-sm-3 col-lg-3 col-xs-3 col-md-3">
-		<a href="#">
-    		  <div class="jumbotron" style="display:block; text-align:center;background-color:#1C86EE; padding:10px">
+		<a href="/merchant/commercials/promotion/">
+    		  <div id="home_tuiguang" class="jumbotron" style="display:block; text-align:center; padding:10px">
 		    <span>
-  		      <p style="color:white; font-size:25px; padding-top:5px">推广 </h2>
+  		      <p style="color:#454545; font-size:25px; font-weight:bold; padding-top:5px">推广{{promotioncount}} </h2>
 		    </span>
 		  </div>
                 </a>
             </div><!--/span-->
 
             <div class="col-3 col-sm-3 col-lg-3 col-xs-3 col-md-3">
-                <a href="#">
-                  <div class="jumbotron" style="display:block; text-align:center;background-color:#1C86EE; padding:10px">
+                <a href="/merchant/comments/">
+                  <div id="home_pinglun" class="jumbotron" style="display:block; text-align:center; padding:10px">
                     <span>
-                      <p style="color:white; font-size:25px; padding-top:5px">评论 </h2>
+                      <p style="color:#454545; font-size:25px; font-weight:bold; padding-top:5px">评论3 </h2>
                     </span>
                   </div>
                 </a>
@@ -82,9 +132,9 @@
 
             <div class="col-3 col-sm-3 col-lg-3 col-xs-3 col-md-3">
                 <a href="#">
-                  <div class="jumbotron" style="display:block; text-align:center;background-color:#1C86EE; padding:10px">
+                  <div id="home_zijin" class="jumbotron" style="display:block; text-align:center; padding:10px">
                     <span>
-                      <p style="color:white; font-size:25px; padding-top:5px">资金 </h2>
+                      <p style="color:#454545; font-size:25px; font-weight:bold; padding-top:5px">资金 </h2>
                     </span>
                   </div>
                 </a>

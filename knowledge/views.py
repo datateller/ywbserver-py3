@@ -31,6 +31,7 @@ def web_view(request):
             return HttpResponseNotFound("Not Found")
         content = k.content
         html = content
+        return HttpResponse(html)
         adaptorstr = '''<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1" />'''
         imagestyle = '''<style type="text/css"> div img { display:none } </style>'''
         split1 = html.split('<head>')
@@ -84,6 +85,8 @@ def knowledge_list_encode(knowls):
         t['title'] = knowl.title
         t['pic'] = 'http://www.yangwabao.com:8001/pic/'+str(random.randint(0,9))+'.jpg'
         t['icon'] = 'http://www.yangwabao.com:8001/icon/'+str(random.randint(0,9))+'.png'
+        if knowl.images:
+            t['icon'] = knowl.images
         if knowl.abstract:
             t['Abstract'] = knowl.abstract
         else:
