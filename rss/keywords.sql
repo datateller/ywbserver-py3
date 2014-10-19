@@ -75,7 +75,6 @@ COPY rss_tlnewskeyword (id, word, age) FROM stdin;
 6	5岁	5
 14	小升初	12
 15	小学生	6
-\.
 
 
 --

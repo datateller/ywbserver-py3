@@ -93,6 +93,10 @@ def register(request):
         baby_sex = request.POST.get('babysex')
         baby_homeaddr = request.POST.get('homeaddr')
         baby_schooladdr = request.POST.get('schooladdr')
+        homelng = request.POST.get('homelng')
+        homelat = request.POST.get('homelat')
+        schoollng = request.POST.get('schoollng')
+        schoollat = request.POST.get('schoollat')
         baby_mobile = request.POST.get('mobile')
         baby.name = baby_name
         baby.height = baby_height
@@ -108,7 +112,11 @@ def register(request):
         #get latitude and longitude from baidumap.and save as a geo point.
         need_circle = False
         try:
-            if(baby_homeaddr):
+            if(homelng and homelat):
+                baby.homepoint = fromstr("POINT(%s %s)" % (homelng, homelat))
+                baby.city = get_baidu_city(homelng, homelat)
+                baby.homeaddr = get_baidu_address(homelat, homelng)
+            elif(baby_homeaddr):
                 baiduresp = get_baidu_location(baby_homeaddr)
                 if baiduresp['result']['location']['lng'] and baiduresp['result']['location']['lat']:
                     lng = baiduresp['result']['location']['lng']
@@ -133,7 +141,11 @@ def register(request):
             return HttpResponse(json_serialize(status = 'HOMEADDR_FORMAT_ERR'))
         ##try to save the school address
         try:
-            if(baby_schooladdr):
+            if(schoollng and schoollat):
+                baby.schoolpoint = fromstr("POINT(%s %s)" % (schoollng, schoollat))
+                baby.city = get_baidu_city(schoollng, schoollat)
+                baby.schooladdr = get_baidu_address(homelat, homelng)
+            elif(baby_schooladdr):
                 baiduresp = get_baidu_location(baby_schooladdr)
                 if baiduresp['result']['location']['lng'] and baiduresp['result']['location']['lat']:
                     lng = baiduresp['result']['location']['lng']
@@ -183,6 +195,10 @@ def update(request):
         baby_name = request.POST.get('babyname')
         baby_homeaddr = request.POST.get('homeaddr')
         baby_schooladdr = request.POST.get('schooladdr')
+        homelng = request.POST.get('homelng')
+        homelat = request.POST.get('homelat')
+        schoollng = request.POST.get('schoollng')
+        schoollat = request.POST.get('schoollat')
         baby_mobile = request.POST.get('mobile')
         baby = User.objects.get(id=user.id).baby
         if not baby:
@@ -206,7 +222,11 @@ def update(request):
         if baby_name:
             baby.name = baby_name
         try:
-            if(baby_homeaddr):
+            if(homelng and homelat):
+                baby.homepoint = fromstr("POINT(%s %s)" % (homelng, homelat))
+                baby.city = get_baidu_city(homelng, homelat)
+                baby.homeaddr = get_baidu_address(homelat, homelng)
+            elif(baby_homeaddr):
                 baiduresp = get_baidu_location(baby_homeaddr)
                 if baiduresp['result']['location']['lng'] and baiduresp['result']['location']['lat']:
                     lng = baiduresp['result']['location']['lng']
@@ -225,8 +245,24 @@ def update(request):
         except Exception as e:
             print(e)
             return HttpResponse(json_serialize(status = "HOMEADDR_FORMAT_EXCEPTION", result = {}))
-        if baby_schooladdr:
-            baby.schooladdr = baby_schooladdr
+        try:
+            if(schoollng and schoollat):
+                baby.schoolpoint = fromstr("POINT(%s %s)" % (schoollng, schoollat))
+                baby.schooladdr = get_baidu_address(schoollat, schoollng)
+            elif(baby_schooladdr):
+                baiduresp = get_baidu_location(baby_schooladdr)
+                if baiduresp['result']['location']['lng'] and baiduresp['result']['location']['lat']:
+                    lng = baiduresp['result']['location']['lng']
+                    lat = baiduresp['result']['location']['lat']
+                    baby.schoolpoint = fromstr("POINT(%s %s)" % (lng, lat))
+                    baby.schooladdr = baby_schooladdr
+                else:
+                    return HttpResponse(json_serialize(status = "SCHOOLADDR_FORMAT_ERR", result = {}))
+        except Exception as e:
+            print(e)
+            return HttpResponse(json_serialize(status = "SCHOOLADDR_FORMAT_EXCEPTION", result = {}))
+#         if baby_schooladdr:
+#             baby.schooladdr = baby_schooladdr
         baby.save()
         response = 'False'
         if baby is None:
@@ -237,20 +273,6 @@ def update(request):
         print(e)
         return HttpResponse(json_serialize(status = "HTTP_METHOD_ERR", result = e))
 
-
-@csrf_exempt
-def informationcheck(request):
-    try:
-        (authed, username, password, user) = auth_user(request)
-        if not user:
-            print("##user not pass")
-            return HttpResponse('False')
-        else:
-            print("##user check pass")
-            return HttpResponse('True')
-    except Exception as e:
-        print(e)
-        return HttpResponse(e)
 
 @csrf_exempt
 def getinfo(request):
